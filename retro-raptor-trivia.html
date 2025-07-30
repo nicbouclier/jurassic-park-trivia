@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦖 RETRO RAPTOR TRIVIA 🦖</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Press Start 2P', monospace;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #00ff00;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+        
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+                radial-gradient(2px 2px at 40px 70px, #fff, transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, #fff, transparent),
+                radial-gradient(2px 2px at 160px 30px, #fff, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: twinkle 4s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .ui-container {
+            position: relative;
+            z-index: 100;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #ff6b35;
+            font-size: 24px;
+            text-shadow: 3px 3px 0px #000, -1px -1px 0px #000;
+            margin-bottom: 10px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 3px 3px 0px #000, -1px -1px 0px #000, 0 0 10px #ff6b35; }
+            to { text-shadow: 3px 3px 0px #000, -1px -1px 0px #000, 0 0 20px #ff6b35, 0 0 30px #ff6b35; }
+        }
+        
+        .health-bar {
+            background: #333;
+            border: 3px solid #00ff00;
+            height: 30px;
+            margin: 20px auto;
+            position: relative;
+            width: 300px;
+        }
+        
+        .health-fill {
+            background: linear-gradient(90deg, #00ff00, #ffff00, #ff6b35);
+            height: 100%;
+            transition: width 0.5s ease;
+            width: 100%;
+        }
+        
+        .health-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .question-box {
+            background: rgba(0, 0, 0, 0.8);
+            border: 4px solid #00ff00;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .question-text {
+            color: #ffffff;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .option {
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border: 2px solid #666;
+            color: #00ff00;
+            cursor: pointer;
+            font-size: 10px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+        
+        .option:hover {
+            background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
+            border-color: #00ff00;
+            transform: translateY(-2px);
+        }
+        
+        .option.correct {
+            background: linear-gradient(145deg, #0a5a0a, #0a3a0a);
+            border-color: #00ff00;
+            animation: pulse 0.5s ease;
+        }
+        
+        .option.incorrect {
+            background: linear-gradient(145deg, #5a0a0a, #3a0a0a);
+            border-color: #ff0000;
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .raptor {
+            position: absolute;
+            width: 60px;
+            height: 40px;
+            font-size: 30px;
+            z-index: 50;
+            transition: all 0.8s ease;
+            animation: bob 2s ease-in-out infinite;
+        }
+        
+        @keyframes bob {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .raptor.hunting {
+            animation: hunt 1s ease-in-out infinite, bob 2s ease-in-out infinite;
+        }
+        
+        @keyframes hunt {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(180deg); }
+        }
+        
+        .game-button {
+            background: linear-gradient(145deg, #ff6b35, #e55a2b);
+            border: 3px solid #00ff00;
+            color: #ffffff;
+            cursor: pointer;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 12px;
+            margin: 10px;
+            padding: 15px 30px;
+            text-shadow: 2px 2px 0px #000;
+            transition: all 0.3s ease;
+        }
+        
+        .game-button:hover {
+            background: linear-gradient(145deg, #e55a2b, #ff6b35);
+            transform: translateY(-2px);
+        }
+        
+        .score-display {
+            color: #ffff00;
+            font-size: 16px;
+            margin: 20px 0;
+            text-shadow: 2px 2px 0px #000;
+        }
+        
+        .game-over {
+            background: rgba(255, 0, 0, 0.9);
+            border: 5px solid #ffffff;
+            border-radius: 15px;
+            color: #ffffff;
+            font-size: 18px;
+            left: 50%;
+            padding: 40px;
+            position: absolute;
+            text-align: center;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 200;
+            animation: gameOverPulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes gameOverPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.05); }
+        }
+        
+        .warning-text {
+            color: #ff6b35;
+            font-size: 10px;
+            margin: 10px 0;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="stars"></div>
+        
+        <!-- Raptors will be spawned here -->
+        
+        <div class="ui-container">
+            <h1>🦖 RETRO RAPTOR TRIVIA 🦖</h1>
+            
+            <div class="health-bar">
+                <div class="health-fill" id="health-fill"></div>
+                <div class="health-text">SURVIVAL: <span id="health-percent">100</span>%</div>
+            </div>
+            
+            <div id="warning-display"></div>
+            
+            <div id="quiz-container">
+                <div class="score-display">Score: <span id="score">0</span> | Question: <span id="question-num">0</span>/10</div>
+                <div id="question-container"></div>
+                <button class="game-button" onclick="startGame()">START GAME</button>
+            </div>
+        </div>
+        
+        <div id="game-over-screen" class="game-over" style="display: none;">
+            <h2>🦖 GAME OVER 🦖</h2>
+            <p id="final-message"></p>
+            <div class="score-display">Final Score: <span id="final-score">0</span>/10</div>
+            <button class="game-button" onclick="startGame()">TRY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "What is the name of the island where Jurassic Park is located?",
+                options: ["Isla Nublar", "Isla Sorna", "Isla Muerta", "Isla Verde"],
+                correct: 0
+            },
+            {
+                question: "Who wrote the novel on which the movie is based?",
+                options: ["Stephen King", "Michael Crichton", "Dean Koontz", "Tom Clancy"],
+                correct: 1
+            },
+            {
+                question: "What is Dr. Alan Grant's profession?",
+                options: ["Geneticist", "Paleobotanist", "Paleontologist", "Mathematician"],
+                correct: 2
+            },
+            {
+                question: "Which dinosaur is NOT featured in the original Jurassic Park movie?",
+                options: ["Velociraptor", "Spinosaurus", "Brachiosaurus", "Dilophosaurus"],
+                correct: 1
+            },
+            {
+                question: "Which character says 'Life finds a way'?",
+                options: ["Dr. Grant", "Dr. Malcolm", "Dr. Sattler", "John Hammond"],
+                correct: 1
+            },
+            {
+                question: "What does John Hammond use his cane for besides walking?",
+                options: ["Fighting dinosaurs", "Storing amber", "Hiding a weapon", "Nothing special"],
+                correct: 1
+            },
+            {
+                question: "What is the security system's main computer called?",
+                options: ["UNIX System", "Mother", "HAL 9000", "Deep Thought"],
+                correct: 0
+            },
+            {
+                question: "What do the velociraptors primarily hunt in?",
+                options: ["Packs", "Alone", "Only at night", "Only herbivores"],
+                correct: 0
+            },
+            {
+                question: "What is Dennis Nedry's motivation for sabotaging the park?",
+                options: ["Revenge", "Money", "Scientific ethics", "Fear"],
+                correct: 1
+            },
+            {
+                question: "Which T-Rex scene happens during a rainstorm?",
+                options: ["First encounter", "Final chase", "Bathroom scene", "Lawyer's death"],
+                correct: 0
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let health = 100;
+        let raptors = [];
+        let gameActive = false;
+        let answered = false;
+
+        function startGame() {
+            currentQuestion = 0;
+            score = 0;
+            health = 100;
+            raptors = [];
+            gameActive = true;
+            answered = false;
+            
+            document.getElementById('game-over-screen').style.display = 'none';
+            document.getElementById('score').textContent = score;
+            document.getElementById('question-num').textContent = 1;
+            updateHealth();
+            clearRaptors();
+            spawnInitialRaptors();
+            showQuestion();
+        }
+
+        function spawnInitialRaptors() {
+            // Start with 2 raptors at safe distances
+            spawnRaptor(100, Math.random() * window.innerHeight);
+            spawnRaptor(window.innerWidth - 100, Math.random() * window.innerHeight);
+        }
+
+        function spawnRaptor(x, y) {
+            const raptor = document.createElement('div');
+            raptor.className = 'raptor';
+            raptor.innerHTML = '🦖';
+            raptor.style.left = x + 'px';
+            raptor.style.top = y + 'px';
+            
+            const raptorData = {
+                element: raptor,
+                x: x,
+                y: y,
+                targetX: x,
+                targetY: y
+            };
+            
+            raptors.push(raptorData);
+            document.querySelector('.game-container').appendChild(raptor);
+            
+            // Start moving the raptor
+            moveRaptor(raptorData);
+        }
+
+        function moveRaptor(raptorData) {
+            if (!gameActive) return;
+            
+            const speed = 0.5 + (100 - health) / 100; // Faster as health decreases
+            
+            // Move towards center with some randomness
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            const directionX = centerX - raptorData.x;
+            const directionY = centerY - raptorData.y;
+            const distance = Math.sqrt(directionX * directionX + directionY * directionY);
+            
+            if (distance > 50) {
+                raptorData.x += (directionX / distance) * speed + (Math.random() - 0.5) * 2;
+                raptorData.y += (directionY / distance) * speed + (Math.random() - 0.5) * 2;
+                
+                raptorData.element.style.left = raptorData.x + 'px';
+                raptorData.element.style.top = raptorData.y + 'px';
+            }
+            
+            // Check if raptor is too close (game over condition)
+            if (distance < 150 && health <= 20) {
+                gameOver("The raptors got too close! You've been discovered!");
+                return;
+            }
+            
+            // Continue moving
+            setTimeout(() => moveRaptor(raptorData), 50);
+        }
+
+        function clearRaptors() {
+            raptors.forEach(raptor => {
+                if (raptor.element.parentNode) {
+                    raptor.element.parentNode.removeChild(raptor.element);
+                }
+            });
+            raptors = [];
+        }
+
+        function updateHealth() {
+            const healthPercent = Math.max(0, health);
+            document.getElementById('health-fill').style.width = healthPercent + '%';
+            document.getElementById('health-percent').textContent = healthPercent;
+            
+            const warningDisplay = document.getElementById('warning-display');
+            
+            if (health <= 30) {
+                warningDisplay.innerHTML = '<div class="warning-text">⚠️ RAPTORS CLOSING IN! ⚠️</div>';
+                // Make all raptors hunt
+                raptors.forEach(raptor => {
+                    raptor.element.classList.add('hunting');
+                });
+            } else if (health <= 60) {
+                warningDisplay.innerHTML = '<div class="warning-text">🦖 Raptors are getting suspicious... 🦖</div>';
+            } else {
+                warningDisplay.innerHTML = '';
+                raptors.forEach(raptor => {
+                    raptor.element.classList.remove('hunting');
+                });
+            }
+        }
+
+        function showQuestion() {
+            if (currentQuestion >= questions.length) {
+                if (health > 0) {
+                    gameOver("Congratulations! You survived the raptors and completed the trivia!");
+                } else {
+                    gameOver("You completed the questions but the raptors got you!");
+                }
+                return;
+            }
+
+            const q = questions[currentQuestion];
+            const container = document.getElementById('question-container');
+            
+            container.innerHTML = `
+                <div class="question-box">
+                    <div class="question-text">${q.question}</div>
+                    <div class="options">
+                        ${q.options.map((option, index) => 
+                            `<div class="option" onclick="selectAnswer(${index})">${String.fromCharCode(65 + index)}: ${option}</div>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+            answered = false;
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (answered || !gameActive) return;
+            answered = true;
+
+            const q = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            
+            if (selectedIndex === q.correct) {
+                // Correct answer
+                options[selectedIndex].classList.add('correct');
+                score++;
+                document.getElementById('score').textContent = score;
+            } else {
+                // Wrong answer
+                options[selectedIndex].classList.add('incorrect');
+                options[q.correct].classList.add('correct');
+                
+                // Reduce health and spawn more raptors
+                health -= 15;
+                updateHealth();
+                
+                // Spawn additional raptor on wrong answer
+                const side = Math.random() < 0.5 ? 0 : window.innerWidth;
+                spawnRaptor(side, Math.random() * window.innerHeight);
+                
+                if (health <= 0) {
+                    setTimeout(() => {
+                        gameOver("The raptors have cornered you! Wrong answers made them suspicious!");
+                    }, 1000);
+                    return;
+                }
+            }
+
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+            });
+
+            setTimeout(() => {
+                currentQuestion++;
+                document.getElementById('question-num').textContent = Math.min(currentQuestion + 1, questions.length);
+                showQuestion();
+            }, 2000);
+        }
+
+        function gameOver(message) {
+            gameActive = false;
+            document.getElementById('final-message').textContent = message;
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('game-over-screen').style.display = 'block';
+            
+            // Make all raptors hunt
+            raptors.forEach(raptor => {
+                raptor.element.classList.add('hunting');
+            });
+        }
+
+        // Initialize the game
+        window.addEventListener('load', () => {
+            // Add some ambient movement
+            setInterval(() => {
+                if (!gameActive) return;
+                
+                raptors.forEach(raptor => {
+                    // Add slight random movement
+                    raptor.x += (Math.random() - 0.5) * 2;
+                    raptor.y += (Math.random() - 0.5) * 2;
+                    
+                    // Keep within bounds
+                    raptor.x = Math.max(0, Math.min(window.innerWidth - 60, raptor.x));
+                    raptor.y = Math.max(0, Math.min(window.innerHeight - 40, raptor.y));
+                });
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InGen - Jurassic Park Security Interface v2.1</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: 
+                radial-gradient(ellipse at center, #1a2833 0%, #0f1b24 70%),
+                linear-gradient(45deg, #162028 0%, #0a1419 100%);
+            font-family: 'IBM Plex Mono', monospace;
+            height: 100vh;
+            overflow: hidden;
+            color: #e0e0e0;
+        }
+        
+        /* Animated scan lines like in the movie */
+        .scan-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 200, 0.03) 2px,
+                    rgba(0, 255, 200, 0.03) 4px
+                );
+            pointer-events: none;
+            z-index: 1000;
+            animation: scanlines 2s linear infinite;
+        }
+        
+        @keyframes scanlines {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(4px); }
+        }
+        
+        .sgi-desktop {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            background-attachment: fixed;
+        }
+        
+        /* Enhanced 3D window styling */
+        .window {
+            position: absolute;
+            background: 
+                linear-gradient(145deg, #4a6b7c 0%, #3a5b6c 50%, #2a4b5c 100%);
+            border: 3px outset #5a7b8c;
+            border-radius: 6px;
+            box-shadow: 
+                inset 2px 2px 4px rgba(255,255,255,0.25),
+                inset -2px -2px 4px rgba(0,0,0,0.4),
+                6px 6px 20px rgba(0,0,0,0.6),
+                0 0 40px rgba(0, 200, 255, 0.1);
+        }
+        
+        .title-bar {
+            background: 
+                linear-gradient(145deg, #6a8b9c 0%, #5a7b8c 50%, #4a6b7c 100%);
+            padding: 10px 15px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #ffffff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            border-bottom: 2px solid #7a9bac;
+            position: relative;
+        }
+        
+        .title-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+        }
+        
+        /* Main Park View - 3D Isometric */
+        .park-view-window {
+            top: 20px;
+            left: 20px;
+            width: 750px;
+            height: 520px;
+        }
+        
+        .park-3d-view {
+            background: 
+                radial-gradient(ellipse at center, #0a1a2a 0%, #051015 70%),
+                linear-gradient(45deg, #0f1f2f 0%, #051015 100%);
+            height: calc(100% - 50px);
+            position: relative;
+            overflow: hidden;
+            border: 2px inset #4a6b7c;
+            perspective: 1000px;
+        }
+        
+        /* Animated grid system */
+        .grid-system {
+            position: absolute;
+            width: 120%;
+            height: 120%;
+            top: -10%;
+            left: -10%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 200, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 200, 0.3) 1px, transparent 1px),
+                linear-gradient(rgba(0, 200, 255, 0.2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 200, 255, 0.2) 1px, transparent 1px);
+            background-size: 40px 40px, 40px 40px, 200px 200px, 200px 200px;
+            animation: gridMove 20s linear infinite;
+            transform: rotateX(60deg) rotateY(10deg);
+        }
+        
+        @keyframes gridMove {
+            0% { transform: rotateX(60deg) rotateY(10deg) translateZ(0px); }
+            100% { transform: rotateX(60deg) rotateY(10deg) translateZ(40px); }
+        }
+        
+        /* 3D Park Structures */
+        .park-structure {
+            position: absolute;
+            transform-style: preserve-3d;
+            transition: all 0.5s ease;
+        }
+        
+        .visitor-center-3d {
+            top: 200px;
+            left: 320px;
+            width: 140px;
+            height: 100px;
+            background: 
+                linear-gradient(135deg, 
+                    rgba(255, 215, 0, 0.8) 0%, 
+                    rgba(255, 140, 0, 0.6) 50%, 
+                    rgba(255, 69, 0, 0.4) 100%);
+            border: 2px solid #ffd700;
+            clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%);
+            box-shadow: 
+                0 0 20px rgba(255, 215, 0, 0.5),
+                inset 0 0 20px rgba(255, 255, 255, 0.2);
+            animation: structurePulse 3s ease-in-out infinite alternate;
+        }
+        
+        .raptor-pen-3d {
+            top: 120px;
+            left: 180px;
+            width: 120px;
+            height: 80px;
+            background: 
+                linear-gradient(135deg, 
+                    rgba(255, 0, 0, 0.8) 0%, 
+                    rgba(220, 20, 60, 0.6) 50%, 
+                    rgba(139, 0, 0, 0.4) 100%);
+            border: 3px solid #ff0000;
+            clip-path: polygon(10% 0%, 90% 0%, 100% 25%, 85% 100%, 15% 100%, 0% 25%);
+            box-shadow: 
+                0 0 30px rgba(255, 0, 0, 0.6),
+                inset 0 0 15px rgba(255, 255, 255, 0.1);
+            animation: dangerPulse 2s ease-in-out infinite alternate;
+        }
+        
+        .trex-paddock-3d {
+            top: 320px;
+            left: 150px;
+            width: 160px;
+            height: 120px;
+            background: 
+                linear-gradient(135deg, 
+                    rgba(255, 140, 0, 0.8) 0%, 
+                    rgba(255, 69, 0, 0.6) 50%, 
+                    rgba(255, 0, 0, 0.4) 100%);
+            border: 3px solid #ff8800;
+            clip-path: polygon(15% 0%, 85% 0%, 100% 15%, 100% 85%, 85% 100%, 15% 100%, 0% 85%, 0% 15%);
+            box-shadow: 
+                0 0 25px rgba(255, 140, 0, 0.5),
+                inset 0 0 20px rgba(255, 255, 255, 0.15);
+            animation: structurePulse 4s ease-in-out infinite alternate;
+        }
+        
+        .dilophosaurus-area-3d {
+            top: 140px;
+            left: 480px;
+            width: 130px;
+            height: 85px;
+            background: 
+                linear-gradient(135deg, 
+                    rgba(138, 43, 226, 0.8) 0%, 
+                    rgba(75, 0, 130, 0.6) 50%, 
+                    rgba(72, 61, 139, 0.4) 100%);
+            border: 2px solid #8a2be2;
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+            box-shadow: 
+                0 0 20px rgba(138, 43, 226, 0.4),
+                inset 0 0 15px rgba(255, 255, 255, 0.1);
+            animation: structurePulse 3.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes structurePulse {
+            0% { transform: translateZ(0px) scale(1); filter: brightness(1); }
+            100% { transform: translateZ(10px) scale(1.02); filter: brightness(1.2); }
+        }
+        
+        @keyframes dangerPulse {
+            0% { transform: translateZ(0px) scale(1); filter: brightness(1) saturate(1); }
+            100% { transform: translateZ(15px) scale(1.05); filter: brightness(1.5) saturate(1.5); }
+        }
+        
+        /* Enhanced Security Gates with 3D effects */
+        .security-gate-3d {
+            position: absolute;
+            width: 12px;
+            height: 40px;
+            background: linear-gradient(180deg, #00ff00 0%, #00cc00 50%, #009900 100%);
+            border: 1px solid #00ff00;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            transform-style: preserve-3d;
+            box-shadow: 
+                0 0 15px rgba(0, 255, 0, 0.8),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.3);
+            animation: gatePulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes gatePulse {
+            0%, 100% { 
+                box-shadow: 0 0 15px rgba(0, 255, 0, 0.8), inset 1px 1px 2px rgba(255, 255, 255, 0.3);
+                transform: translateZ(0px);
+            }
+            50% { 
+                box-shadow: 0 0 25px rgba(0, 255, 0, 1), inset 1px 1px 2px rgba(255, 255, 255, 0.5);
+                transform: translateZ(5px);
+            }
+        }
+        
+        .security-gate-3d.breached {
+            background: linear-gradient(180deg, #ff0000 0%, #cc0000 50%, #990000 100%);
+            border-color: #ff0000;
+            box-shadow: 
+                0 0 20px rgba(255, 0, 0, 1),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.2);
+            animation: breachAlarm 0.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes breachAlarm {
+            0% { 
+                transform: translateZ(0px) rotateY(0deg);
+                filter: brightness(1);
+            }
+            100% { 
+                transform: translateZ(8px) rotateY(10deg);
+                filter: brightness(1.8);
+            }
+        }
+        
+        /* Gate positions */
+        .gate-1 { top: 150px; left: 230px; }
+        .gate-2 { top: 150px; left: 270px; }
+        .gate-3 { top: 370px; left: 190px; }
+        .gate-4 { top: 370px; left: 230px; }
+        .gate-5 { top: 170px; left: 520px; }
+        .gate-6 { top: 170px; left: 560px; }
+        
+        /* Data Stream Window */
+        .data-stream-window {
+            top: 20px;
+            right: 20px;
+            width: 320px;
+            height: 520px;
+        }
+        
+        .data-stream-panel {
+            background: 
+                radial-gradient(ellipse at center, #051520 0%, #020a10 70%);
+            height: calc(100% - 50px);
+            padding: 15px;
+            font-size: 11px;
+            line-height: 1.3;
+            border: 2px inset #4a6b7c;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .data-stream-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 1px,
+                    rgba(0, 255, 200, 0.05) 1px,
+                    rgba(0, 255, 200, 0.05) 2px
+                );
+            pointer-events: none;
+            animation: dataFlow 3s linear infinite;
+        }
+        
+        @keyframes dataFlow {
+            0% { transform: translateX(0px); }
+            100% { transform: translateX(2px); }
+        }
+        
+        .system-readout {
+            margin: 8px 0;
+            padding: 4px 8px;
+            border-left: 3px solid;
+            position: relative;
+        }
+        
+        .readout-ok {
+            border-color: #00ff00;
+            color: #00ff88;
+            text-shadow: 0 0 8px rgba(0, 255, 136, 0.6);
+            background: rgba(0, 255, 0, 0.05);
+        }
+        
+        .readout-warning {
+            border-color: #ffff00;
+            color: #ffff88;
+            text-shadow: 0 0 8px rgba(255, 255, 136, 0.6);
+            background: rgba(255, 255, 0, 0.05);
+        }
+        
+        .readout-critical {
+            border-color: #ff0000;
+            color: #ff8888;
+            text-shadow: 0 0 8px rgba(255, 136, 136, 0.6);
+            background: rgba(255, 0, 0, 0.05);
+            animation: criticalBlink 1s ease-in-out infinite;
+        }
+        
+        @keyframes criticalBlink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.6; }
+        }
+        
+        /* Enhanced Progress Bar */
+        .security-integrity-bar {
+            background: 
+                linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+            border: 2px inset #4a6b7c;
+            height: 30px;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .integrity-fill {
+            background: 
+                linear-gradient(90deg, 
+                    #00ff00 0%, 
+                    #88ff00 25%, 
+                    #ffff00 50%, 
+                    #ff8800 75%, 
+                    #ff0000 100%);
+            height: 100%;
+            width: 100%;
+            transition: width 0.8s ease;
+            position: relative;
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+        
+        .integrity-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shimmer 2s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .integrity-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            font-weight: 600;
+            color: #000;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+            z-index: 10;
+        }
+        
+        /* Quiz Interface Window */
+        .quiz-interface-window {
+            bottom: 20px;
+            left: 20px;
+            width: 750px;
+            height: 180px;
+        }
+        
+        .quiz-interface-panel {
+            background: 
+                radial-gradient(ellipse at center, #0a1520 0%, #051015 70%);
+            height: calc(100% - 50px);
+            padding: 15px;
+            border: 2px inset #4a6b7c;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .quiz-interface-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 20px,
+                    rgba(0, 200, 255, 0.03) 20px,
+                    rgba(0, 200, 255, 0.03) 21px
+                );
+            pointer-events: none;
+        }
+        
+        .question-display {
+            color: #ffffff;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+            padding: 8px;
+            background: rgba(0, 100, 200, 0.1);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+        }
+        
+        .answer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .answer-option {
+            background: 
+                linear-gradient(145deg, #3a5b6c 0%, #2a4b5c 50%, #1a3b4c 100%);
+            border: 2px outset #4a6b7c;
+            color: #e0e0e0;
+            padding: 10px 15px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .answer-option:hover {
+            background: 
+                linear-gradient(145deg, #4a6b7c 0%, #3a5b6c 50%, #2a4b5c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .answer-option:active {
+            border: 2px inset #4a6b7c;
+            transform: translateY(1px);
+        }
+        
+        .answer-option.correct {
+            background: 
+                linear-gradient(145deg, #2a6a2a 0%, #1a5a1a 50%, #0a4a0a 100%);
+            border-color: #00ff00;
+            color: #00ff88;
+            text-shadow: 0 0 8px rgba(0, 255, 136, 0.8);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+        }
+        
+        .answer-option.incorrect {
+            background: 
+                linear-gradient(145deg, #6a2a2a 0%, #5a1a1a 50%, #4a0a0a 100%);
+            border-color: #ff0000;
+            color: #ff8888;
+            text-shadow: 0 0 8px rgba(255, 136, 136, 0.8);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+        }
+        
+        .control-button {
+            background: 
+                linear-gradient(145deg, #ff8800 0%, #ee7700 50%, #dd6600 100%);
+            border: 3px outset #ffaa00;
+            color: #ffffff;
+            padding: 12px 25px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            margin: 15px auto;
+            display: block;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .control-button:hover {
+            background: 
+                linear-gradient(145deg, #ffaa00 0%, #ff9900 50%, #ff8800 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        .control-button:active {
+            border: 3px inset #ffaa00;
+            transform: translateY(1px);
+        }
+        
+        /* Alert System */
+        .security-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: 
+                linear-gradient(145deg, #6a2a2a 0%, #5a1a1a 50%, #4a0a0a 100%);
+            border: 4px outset #ff4444;
+            padding: 30px 40px;
+            text-align: center;
+            color: #ff8888;
+            font-size: 16px;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(255, 136, 136, 0.8);
+            z-index: 2000;
+            display: none;
+            box-shadow: 
+                0 0 50px rgba(255, 0, 0, 0.6),
+                inset 0 0 20px rgba(255, 255, 255, 0.1);
+            animation: alertPulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes alertPulse {
+            0%, 100% { 
+                transform: translate(-50%, -50%) scale(1);
+                filter: brightness(1);
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.05);
+                filter: brightness(1.3);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scan-overlay"></div>
+    
+    <div class="sgi-desktop">
+        <!-- Main Park 3D View -->
+        <div class="window park-view-window">
+            <div class="title-bar">
+                JURASSIC PARK - ISLA NUBLAR FACILITY OVERVIEW
+                <span style="float: right; font-size: 10px;">SECTOR 7-G SECURITY GRID</span>
+            </div>
+            <div class="park-3d-view">
+                <div class="grid-system"></div>
+                
+                <!-- 3D Park Structures -->
+                <div class="park-structure visitor-center-3d">
+                    <div style="text-align: center; padding-top: 35px; font-size: 10px; font-weight: bold; color: #000;">
+                        VISITOR<br>CENTER
+                    </div>
+                </div>
+                
+                <div class="park-structure raptor-pen-3d">
+                    <div style="text-align: center; padding-top: 25px; font-size: 9px; font-weight: bold; color: #fff;">
+                        RAPTOR<br>CONTAINMENT
+                    </div>
+                </div>
+                
+                <div class="park-structure trex-paddock-3d">
+                    <div style="text-align: center; padding-top: 45px; font-size: 10px; font-weight: bold; color: #fff;">
+                        T-REX<br>PADDOCK
+                    </div>
+                </div>
+                
+                <div class="park-structure dilophosaurus-area-3d">
+                    <div style="text-align: center; padding-top: 30px; font-size: 9px; font-weight: bold; color: #fff;">
+                        DILOPH.<br>SECTOR
+                    </div>
+                </div>
+                
+                <!-- Enhanced Security Gates -->
+                <div class="security-gate-3d gate-1" data-gate="1" title="Raptor Pen - Primary Gate"></div>
+                <div class="security-gate-3d gate-2" data-gate="2" title="Raptor Pen - Secondary Gate"></div>
+                <div class="security-gate-3d gate-3" data-gate="3" title="T-Rex Paddock - Main Access"></div>
+                <div class="security-gate-3d gate-4" data-gate="4" title="T-Rex Paddock - Service Gate"></div>
+                <div class="security-gate-3d gate-5" data-gate="5" title="Dilophosaurus - Containment Gate"></div>
+                <div class="security-gate-3d gate-6" data-gate="6" title="Perimeter - Emergency Gate"></div>
+            </div>
+        </div>
+        
+        <!-- Data Stream / System Status -->
+        <div class="window data-stream-window">
+            <div class="title-bar">
+                INGEN SECURITY MONITORING SYSTEM
+                <span style="float: right; font-size: 10px;">REAL-TIME DATA STREAM</span>
+            </div>
+            <div class="data-stream-panel">
+                <div class="system-readout readout-ok">POWER GRID: OPERATIONAL - 99.7% EFFICIENCY</div>
+                <div class="system-readout readout-ok">COMMUNICATIONS: ONLINE - ALL CHANNELS ACTIVE</div>
+                <div class="system-readout readout-warning">USER ACCESS: D.NEDRY - RESTRICTED PRIVILEGES</div>
+                <div class="system-readout" id="gate-security-status">CONTAINMENT: ALL GATES SECURE</div>
+                
+                <div class="security-integrity-bar">
+                    <div class="integrity-fill" id="security-integrity-fill"></div>
+                    <div class="integrity-text">PARK SECURITY: <span id="integrity-percentage">100</span>%</div>
+                </div>
+                
+                <div style="margin-top: 20px; color: #00ffff; text-shadow: 0 0 6px rgba(0, 255, 255, 0.6);">
+                    <div>ASSESSMENT SCORE: <span id="current-score">0</span>/10</div>
+                    <div>CURRENT QUESTION: <span id="question-progress">0</span>/10</div>
+                    <div>BREACHES DETECTED: <span id="breach-count">0</span></div>
+                </div>
+                
+                <div style="margin-top: 20px; border-top: 1px solid #444; padding-top: 15px;">
+                    <div style="color: #ffff88; font-size: 10px; margin-bottom: 8px;">SECURITY EVENT LOG:</div>
+                    <div id="security-log" style="height: 120px; overflow-y: auto; font-size: 9px; line-height: 1.3;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quiz Interface -->
+        <div class="window quiz-interface-window">
+            <div class="title-bar">
+                JURASSIC PARK KNOWLEDGE ASSESSMENT MODULE
+                <span style="float: right; font-size: 10px;">AUTHORIZATION REQUIRED</span>
+            </div>
+            <div class="quiz-interface-panel">
+                <div id="quiz-content">
+                    <div style="text-align: center; color: #00ffff; margin: 20px 0;">
+                        <div style="font-size: 15px; margin-bottom: 10px; text-shadow: 0 0 8px rgba(0, 255, 255, 0.8);">
+                            INGEN SECURITY CLEARANCE ASSESSMENT
+                        </div>
+                        <div style="font-size: 11px; margin-bottom: 20px; color: #ffff88;">
+                            Complete all questions to maintain system access privileges
+                        </div>
+                        <button class="control-button" onclick="initializeAssessment()">INITIALIZE ASSESSMENT PROTOCOL</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Security Alert -->
+        <div id="security-alert" class="security-alert">
+            <div id="alert-content"></div>
+            <button class="control-button" onclick="acknowledgeAlert()" style="margin-top: 20px;">ACKNOWLEDGE BREACH</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "What is the primary security protocol for dinosaur containment areas?",
+                options: ["Electric fencing only", "Double-gate system with failsafes", "Motion sensors", "Manual observation"],
+                correct: 1,
+                breach: "Primary containment protocol compromised"
+            },
+            {
+                question: "Which system controls the park's main security grid?",
+                options: ["UNIX workstation network", "Windows-based terminals", "Standalone systems", "Manual controls"],
+                correct: 0,
+                breach: "Network security bypassed"
+            },
+            {
+                question: "What is Dennis Nedry's primary objective in his sabotage plan?",
+                options: ["Shut down power", "Steal embryo samples", "Release dinosaurs", "Access restricted areas"],
+                correct: 1,
+                breach: "Cryogenic storage systems accessed"
+            },
+            {
+                question: "Which containment area poses the highest security risk?",
+                options: ["Herbivore paddocks", "Velociraptor pen", "Visitor areas", "Laboratory complex"],
+                correct: 1,
+                breach: "High-risk containment compromised"
+            },
+            {
+                question: "What is the backup power duration for critical systems?",
+                options: ["5 minutes", "15 minutes", "30 minutes", "1 hour"],
+                correct: 1,
+                breach: "Power grid stability compromised"
+            },
+            {
+                question: "Which dinosaur species demonstrates problem-solving intelligence?",
+                options: ["Triceratops", "Brachiosaurus", "Velociraptors", "Gallimimus"],
+                correct: 2,
+                breach: "Intelligent predator containment failed"
+            },
+            {
+                question: "What happens when park systems detect unauthorized access?",
+                options: ["Silent alarm", "Immediate lockdown", "Audio warning", "All systems shutdown"],
+                correct: 1,
+                breach: "Access control systems overridden"
+            },
+            {
+                question: "Who has the highest security clearance in the park?",
+                options: ["Dennis Nedry", "Ray Arnold", "John Hammond", "Robert Muldoon"],
+                correct: 2,
+                breach: "Administrative privileges compromised"
+            },
+            {
+                question: "What is the park's emergency evacuation protocol?",
+                options: ["Helicopter extraction", "Boat from dock", "Underground tunnels", "No evacuation plan"],
+                correct: 0,
+                breach: "Emergency systems disabled"
+            },
+            {
+                question: "Which system component is most vulnerable to sabotage?",
+                options: ["Physical barriers", "Computer networks", "Communication systems", "Power distribution"],
+                correct: 1,
+                breach: "Critical system vulnerabilities exposed"
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let securityIntegrity = 100;
+        let breachedGates = [];
+        let assessmentActive = false;
+
+        function initializeAssessment() {
+            assessmentActive = true;
+            currentQuestion = 0;
+            score = 0;
+            securityIntegrity = 100;
+            breachedGates = [];
+            
+            // Reset all gates to secure
+            document.querySelectorAll('.security-gate-3d').forEach(gate => {
+                gate.classList.remove('breached');
+            });
+            
+            updateSystemStatus();
+            logSecurityEvent('Assessment protocol initialized', 'ok');
+            showNextQuestion();
+        }
+
+        function showNextQuestion() {
+            if (currentQuestion >= questions.length) {
+                completeAssessment();
+                return;
+            }
+
+            const q = questions[currentQuestion];
+            const quizContent = document.getElementById('quiz-content');
+            
+            quizContent.innerHTML = `
+                <div class="question-display">
+                    SECURITY QUESTION ${currentQuestion + 1}/10: ${q.question}
+                </div>
+                <div class="answer-grid" id="answer-grid">
+                    ${q.options.map((option, index) => 
+                        `<button class="answer-option" onclick="processAnswer(${index})">
+                            ${String.fromCharCode(65 + index)}: ${option}
+                        </button>`
+                    ).join('')}
+                </div>
+            `;
+        }
+
+        function processAnswer(selectedIndex) {
+            if (!assessmentActive) return;
+
+            const q = questions[currentQuestion];
+            const answerButtons = document.querySelectorAll('.answer-option');
+            
+            // Disable all options
+            answerButtons.forEach(btn => btn.style.pointerEvents = 'none');
+
+            if (selectedIndex === q.correct) {
+                // Correct answer
+                answerButtons[selectedIndex].classList.add('correct');
+                score++;
+                logSecurityEvent(`Question ${currentQuestion + 1}: Access granted`, 'ok');
+            } else {
+                // Wrong answer - security breach!
+                answerButtons[selectedIndex].classList.add('incorrect');
+                answerButtons[q.correct].classList.add('correct');
+                
+                securityIntegrity -= 12;
+                executeSecurityBreach(q.breach);
+                logSecurityEvent(`Question ${currentQuestion + 1}: ${q.breach}`, 'critical');
+            }
+
+            updateSystemStatus();
+
+            setTimeout(() => {
+                currentQuestion++;
+                showNextQuestion();
+            }, 3500);
+        }
+
+        function executeSecurityBreach(breachDescription) {
+            // Find available gates to breach
+            const secureGates = Array.from(document.querySelectorAll('.security-gate-3d:not(.breached)'));
+            
+            if (secureGates.length > 0) {
+                const randomGate = secureGates[Math.floor(Math.random() * secureGates.length)];
+                randomGate.classList.add('breached');
+                
+                const gateNumber = randomGate.dataset.gate;
+                breachedGates.push(gateNumber);
+                
+                // Show security alert
+                showSecurityAlert(`CONTAINMENT BREACH DETECTED<br>Gate ${gateNumber} has been compromised<br><br>${breachDescription}`);
+            }
+        }
+
+        function updateSystemStatus() {
+            document.getElementById('current-score').textContent = score;
+            document.getElementById('question-progress').textContent = Math.min(currentQuestion + 1, questions.length);
+            document.getElementById('breach-count').textContent = breachedGates.length;
+            document.getElementById('integrity-percentage').textContent = Math.max(0, securityIntegrity);
+            document.getElementById('security-integrity-fill').style.width = Math.max(0, securityIntegrity) + '%';
+            
+            // Update gate security status
+            const gateStatus = document.getElementById('gate-security-status');
+            if (breachedGates.length === 0) {
+                gateStatus.textContent = 'CONTAINMENT: ALL GATES SECURE';
+                gateStatus.className = 'system-readout readout-ok';
+            } else if (breachedGates.length <= 2) {
+                gateStatus.textContent = `CONTAINMENT: ${breachedGates.length} BREACH${breachedGates.length > 1 ? 'ES' : ''} DETECTED`;
+                gateStatus.className = 'system-readout readout-warning';
+            } else {
+                gateStatus.textContent = `CONTAINMENT: CRITICAL - ${breachedGates.length} ACTIVE BREACHES`;
+                gateStatus.className = 'system-readout readout-critical';
+            }
+        }
+
+        function logSecurityEvent(message, severity) {
+            const log = document.getElementById('security-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `system-readout readout-${severity}`;
+            entry.textContent = `${timestamp}: ${message}`;
+            log.appendChild(entry);
+            
+            // Keep only last 10 entries
+            while (log.children.length > 10) {
+                log.removeChild(log.firstChild);
+            }
+            
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function showSecurityAlert(message) {
+            document.getElementById('alert-content').innerHTML = message;
+            document.getElementById('security-alert').style.display = 'block';
+        }
+
+        function acknowledgeAlert() {
+            document.getElementById('security-alert').style.display = 'none';
+        }
+
+        function completeAssessment() {
+            assessmentActive = false;
+            const percentage = Math.round((score / questions.length) * 100);
+            
+            let completionMessage;
+            if (percentage >= 90 && breachedGates.length === 0) {
+                completionMessage = `ASSESSMENT COMPLETE - EXCEPTIONAL PERFORMANCE<br>Score: ${score}/10 (${percentage}%)<br>Security Status: OPTIMAL<br>All containment protocols maintained.<br>Access privileges: FULL AUTHORIZATION`;
+                logSecurityEvent('Assessment completed with full security', 'ok');
+            } else if (percentage >= 70 && breachedGates.length <= 2) {
+                completionMessage = `ASSESSMENT COMPLETE - SATISFACTORY PERFORMANCE<br>Score: ${score}/10 (${percentage}%)<br>Security Status: ACCEPTABLE<br>${breachedGates.length} minor breach${breachedGates.length !== 1 ? 'es' : ''} detected.<br>Access privileges: STANDARD AUTHORIZATION`;
+                logSecurityEvent('Assessment completed with minor security issues', 'warning');
+            } else {
+                completionMessage = `ASSESSMENT FAILED - SECURITY COMPROMISED<br>Score: ${score}/10 (${percentage}%)<br>Security Status: CRITICAL<br>${breachedGates.length} containment breach${breachedGates.length !== 1 ? 'es' : ''} detected.<br>Access privileges: RESTRICTED - IMMEDIATE REVIEW REQUIRED`;
+                logSecurityEvent('Assessment failed - security protocols compromised', 'critical');
+            }
+            
+            showSecurityAlert(completionMessage);
+            
+            const quizContent = document.getElementById('quiz-content');
+            quizContent.innerHTML = `
+                <div style="text-align: center; color: #00ffff; margin: 20px 0;">
+                    <div style="font-size: 13px; margin-bottom: 20px; color: #ffff88;">
+                        Assessment Protocol Complete
+                    </div>
+                    <button class="control-button" onclick="initializeAssessment()">RESTART ASSESSMENT PROTOCOL</button>
+                </div>
+            `;
+        }
+
+        // Initialize system
+        updateSystemStatus();
+        logSecurityEvent('InGen Security System online - Awaiting assessment', 'ok');
+    </script>
+</body>
+</html>

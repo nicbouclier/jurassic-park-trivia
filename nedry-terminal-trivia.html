@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InGen Security Terminal - Isla Nublar</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            color: #00ff00;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+        
+        /* CRT Screen Effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 255, 0, 0.03),
+                    rgba(0, 255, 0, 0.03) 1px,
+                    transparent 1px,
+                    transparent 2px
+                );
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .terminal {
+            background: #000000;
+            height: 100vh;
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .header {
+            border-bottom: 1px solid #00ff00;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+        
+        .terminal-line {
+            margin: 5px 0;
+            white-space: pre-wrap;
+        }
+        
+        .prompt {
+            color: #00ff00;
+        }
+        
+        .error {
+            color: #ff0000;
+            animation: blink 1s infinite;
+        }
+        
+        .warning {
+            color: #ffff00;
+        }
+        
+        .system {
+            color: #00cccc;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .ascii-raptor {
+            color: #ff0000;
+            font-size: 10px;
+            line-height: 1;
+            position: absolute;
+            animation: raptorMove 3s ease-in-out infinite;
+            z-index: 10;
+        }
+        
+        @keyframes raptorMove {
+            0%, 100% { transform: translateX(0px) translateY(0px); }
+            25% { transform: translateX(20px) translateY(-10px); }
+            50% { transform: translateX(-20px) translateY(10px); }
+            75% { transform: translateX(10px) translateY(-5px); }
+        }
+        
+        .question-block {
+            background: rgba(0, 100, 0, 0.1);
+            border: 1px solid #00ff00;
+            margin: 20px 0;
+            padding: 15px;
+        }
+        
+        .option {
+            background: rgba(0, 50, 0, 0.1);
+            border: 1px solid #004400;
+            cursor: pointer;
+            margin: 5px 0;
+            padding: 8px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .option:hover {
+            background: rgba(0, 100, 0, 0.2);
+            border-color: #00ff00;
+        }
+        
+        .option.correct {
+            background: rgba(0, 255, 0, 0.2);
+            border-color: #00ff00;
+        }
+        
+        .option.incorrect {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+        
+        .security-status {
+            background: rgba(255, 255, 0, 0.1);
+            border: 1px solid #ffff00;
+            margin: 10px 0;
+            padding: 10px;
+        }
+        
+        .typing {
+            animation: typing 0.1s;
+        }
+        
+        @keyframes typing {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .cursor::after {
+            content: '█';
+            animation: cursor-blink 1s infinite;
+        }
+        
+        @keyframes cursor-blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .boot-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            color: #00ff00;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .ingen-logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .loading-bar {
+            width: 300px;
+            height: 20px;
+            border: 1px solid #00ff00;
+            margin: 20px 0;
+        }
+        
+        .loading-fill {
+            height: 100%;
+            background: #00ff00;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Boot Screen -->
+    <div id="boot-screen" class="boot-screen">
+        <div class="ingen-logo">
+            ██╗███╗   ██╗ ██████╗ ███████╗███╗   ██╗<br>
+            ██║████╗  ██║██╔════╝ ██╔════╝████╗  ██║<br>
+            ██║██╔██╗ ██║██║  ███╗█████╗  ██╔██╗ ██║<br>
+            ██║██║╚██╗██║██║   ██║██╔══╝  ██║╚██╗██║<br>
+            ██║██║ ╚████║╚██████╔╝███████╗██║ ╚████║<br>
+            ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝
+        </div>
+        <div>JURASSIC PARK MAIN COMPUTER SYSTEM</div>
+        <div>Isla Nublar Facility Network</div>
+        <div class="loading-bar">
+            <div class="loading-fill" id="loading-fill"></div>
+        </div>
+        <div id="boot-text">Initializing security protocols...</div>
+    </div>
+
+    <!-- Main Terminal -->
+    <div id="terminal" class="terminal" style="display: none;">
+        <div class="header">
+            <div>InGen Corporation - Jurassic Park Security Terminal</div>
+            <div>Isla Nublar Facility - Sector 7-G</div>
+            <div>User: D.NEDRY - Access Level: RESTRICTED</div>
+            <div>System Time: <span id="system-time"></span></div>
+        </div>
+        
+        <div id="terminal-content">
+            <div class="terminal-line prompt">root@isla-nublar:~$ login d.nedry</div>
+            <div class="terminal-line">Password: ********</div>
+            <div class="terminal-line system">Access Granted - Welcome Dennis</div>
+            <div class="terminal-line warning">WARNING: Unauthorized access detected in Sector 5</div>
+            <div class="terminal-line prompt">root@isla-nublar:~$ access trivia_protocol</div>
+            <div class="terminal-line">Loading Jurassic Park Knowledge Assessment...</div>
+            <div class="terminal-line error">ERROR: Security breach detected - Velociraptor containment compromised</div>
+            <div class="terminal-line">You must complete the assessment before evacuation</div>
+            <div class="terminal-line prompt">root@isla-nublar:~$ </div>
+        </div>
+        
+        <!-- Security Status Panel -->
+        <div class="security-status">
+            <div>PARK SECURITY STATUS: <span id="security-level" class="warning">COMPROMISED</span></div>
+            <div>RAPTOR PROXIMITY: <span id="raptor-distance">SAFE</span></div>
+            <div>SYSTEM INTEGRITY: <span id="system-health">75%</span></div>
+        </div>
+        
+        <!-- Quiz Area -->
+        <div id="quiz-area">
+            <div class="terminal-line prompt">Press ENTER to begin assessment or type 'help' for options</div>
+            <div class="terminal-line cursor" id="input-line"></div>
+            <button onclick="startAssessment()" style="background: #004400; color: #00ff00; border: 1px solid #00ff00; padding: 10px; font-family: 'Courier Prime', monospace; margin: 10px 0;">BEGIN TRIVIA ASSESSMENT</button>
+        </div>
+        
+        <div id="question-area" style="display: none;"></div>
+        
+        <!-- ASCII Raptors -->
+        <div id="raptors-container"></div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "What is the name of the island where Jurassic Park is located?",
+                options: ["Isla Nublar", "Isla Sorna", "Isla Muerta", "Isla Verde"],
+                correct: 0
+            },
+            {
+                question: "Who wrote the novel on which the movie is based?",
+                options: ["Stephen King", "Michael Crichton", "Dean Koontz", "Tom Clancy"],
+                correct: 1
+            },
+            {
+                question: "What is Dr. Alan Grant's profession?",
+                options: ["Geneticist", "Paleobotanist", "Paleontologist", "Mathematician"],
+                correct: 2
+            },
+            {
+                question: "Which dinosaur is NOT featured in the original Jurassic Park movie?",
+                options: ["Velociraptor", "Spinosaurus", "Brachiosaurus", "Dilophosaurus"],
+                correct: 1
+            },
+            {
+                question: "What does Dennis Nedry say to the computer when locked out?",
+                options: ["Please", "Magic word", "Access denied", "Hello computer"],
+                correct: 1
+            },
+            {
+                question: "Which character says 'Life finds a way'?",
+                options: ["Dr. Grant", "Dr. Malcolm", "Dr. Sattler", "John Hammond"],
+                correct: 1
+            },
+            {
+                question: "What is the park's main computer system called?",
+                options: ["UNIX System", "Mother", "HAL 9000", "Deep Thought"],
+                correct: 0
+            },
+            {
+                question: "What do the velociraptors primarily hunt in?",
+                options: ["Packs", "Alone", "Only at night", "Only herbivores"],
+                correct: 0
+            },
+            {
+                question: "What is Dennis Nedry's job at the park?",
+                options: ["Security", "Computer programmer", "Paleontologist", "Tour guide"],
+                correct: 1
+            },
+            {
+                question: "What happens when you don't say the magic word?",
+                options: ["System crashes", "Ah ah ah message", "Raptors escape", "Power goes out"],
+                correct: 1
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let systemHealth = 75;
+        let raptorProximity = 100;
+        let gameActive = false;
+
+        // Boot sequence
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                bootSequence();
+            }, 500);
+            
+            updateSystemTime();
+            setInterval(updateSystemTime, 1000);
+        });
+
+        function bootSequence() {
+            const bootTexts = [
+                "Initializing security protocols...",
+                "Loading park systems...",
+                "Accessing dinosaur database...",
+                "WARNING: Nedry security bypass detected",
+                "Emergency protocols activated",
+                "Loading trivia assessment module..."
+            ];
+            
+            let progress = 0;
+            let textIndex = 0;
+            
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+                
+                document.getElementById('loading-fill').style.width = progress + '%';
+                
+                if (textIndex < bootTexts.length && progress > (textIndex + 1) * 16) {
+                    document.getElementById('boot-text').textContent = bootTexts[textIndex];
+                    textIndex++;
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    setTimeout(() => {
+                        document.getElementById('boot-screen').style.display = 'none';
+                        document.getElementById('terminal').style.display = 'block';
+                        spawnRaptors();
+                    }, 1000);
+                }
+            }, 200);
+        }
+
+        function updateSystemTime() {
+            const now = new Date();
+            document.getElementById('system-time').textContent = now.toLocaleTimeString();
+        }
+
+        function spawnRaptors() {
+            const raptorArt = [
+                "    __\n   /  \\\n  /____\\\n  |    |\n  |TRAP|\n  |____|\n\nVELOCIRAPTOR\nDETECTED",
+                "     /|\\\n    /   \\\n   /_____\\\n   | ^ ^ |\n   |  >  |\n   |_____|\n\nHUNTING\nMODE",
+                "   /---\\\n  /     \\\n |  o o  |\n |   <   |\n  \\_____/\n\nCLEVER\nGIRL"
+            ];
+            
+            for (let i = 0; i < 2; i++) {
+                setTimeout(() => {
+                    const raptor = document.createElement('div');
+                    raptor.className = 'ascii-raptor';
+                    raptor.innerHTML = raptorArt[i % raptorArt.length];
+                    raptor.style.left = Math.random() * (window.innerWidth - 200) + 'px';
+                    raptor.style.top = Math.random() * (window.innerHeight - 200) + 200 + 'px';
+                    
+                    document.getElementById('raptors-container').appendChild(raptor);
+                }, i * 2000);
+            }
+        }
+
+        function startAssessment() {
+            gameActive = true;
+            currentQuestion = 0;
+            score = 0;
+            
+            document.getElementById('quiz-area').style.display = 'none';
+            document.getElementById('question-area').style.display = 'block';
+            
+            addTerminalLine("root@isla-nublar:~$ initiate_assessment --priority=high", "prompt");
+            addTerminalLine("Assessment module loaded", "system");
+            addTerminalLine("WARNING: Raptor movement detected - answer quickly!", "warning");
+            
+            showQuestion();
+        }
+
+        function addTerminalLine(text, className = "") {
+            const content = document.getElementById('terminal-content');
+            const line = document.createElement('div');
+            line.className = 'terminal-line ' + className;
+            line.textContent = text;
+            content.appendChild(line);
+            content.scrollTop = content.scrollHeight;
+        }
+
+        function showQuestion() {
+            if (currentQuestion >= questions.length) {
+                endAssessment();
+                return;
+            }
+
+            const q = questions[currentQuestion];
+            const questionArea = document.getElementById('question-area');
+            
+            questionArea.innerHTML = `
+                <div class="question-block">
+                    <div class="terminal-line system">QUESTION ${currentQuestion + 1}/10:</div>
+                    <div class="terminal-line">${q.question}</div>
+                    <div style="margin: 15px 0;">
+                        ${q.options.map((option, index) => 
+                            `<div class="option" onclick="selectAnswer(${index})">
+                                ${String.fromCharCode(65 + index)}: ${option}
+                            </div>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (!gameActive) return;
+
+            const q = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            
+            if (selectedIndex === q.correct) {
+                options[selectedIndex].classList.add('correct');
+                score++;
+                addTerminalLine(`Correct! Score: ${score}/${currentQuestion + 1}`, "system");
+            } else {
+                options[selectedIndex].classList.add('incorrect');
+                options[q.correct].classList.add('correct');
+                addTerminalLine("Incorrect! Raptors are getting closer...", "error");
+                
+                // Decrease system health and increase raptor proximity
+                systemHealth -= 10;
+                raptorProximity -= 15;
+                updateSecurityStatus();
+                
+                // Add more raptors on wrong answers
+                if (raptorProximity < 50) {
+                    const raptor = document.createElement('div');
+                    raptor.className = 'ascii-raptor';
+                    raptor.innerHTML = "HUNTING\nCLOSER";
+                    raptor.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+                    raptor.style.top = Math.random() * (window.innerHeight - 100) + 100 + 'px';
+                    document.getElementById('raptors-container').appendChild(raptor);
+                }
+            }
+
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+            });
+
+            setTimeout(() => {
+                currentQuestion++;
+                showQuestion();
+            }, 2000);
+        }
+
+        function updateSecurityStatus() {
+            document.getElementById('system-health').textContent = systemHealth + '%';
+            
+            let proximityStatus, securityLevel;
+            
+            if (raptorProximity > 70) {
+                proximityStatus = "SAFE";
+                securityLevel = "MONITORED";
+            } else if (raptorProximity > 40) {
+                proximityStatus = "APPROACHING";
+                securityLevel = "ALERT";
+            } else {
+                proximityStatus = "CRITICAL";
+                securityLevel = "EVACUATION";
+            }
+            
+            document.getElementById('raptor-distance').textContent = proximityStatus;
+            document.getElementById('security-level').textContent = securityLevel;
+            
+            if (raptorProximity < 30) {
+                addTerminalLine("CRITICAL: Ah ah ah! You didn't say the magic word!", "error");
+            }
+        }
+
+        function endAssessment() {
+            gameActive = false;
+            const percentage = Math.round((score / questions.length) * 100);
+            
+            addTerminalLine("Assessment complete!", "system");
+            addTerminalLine(`Final score: ${score}/${questions.length} (${percentage}%)`, "system");
+            
+            if (percentage >= 80 && raptorProximity > 30) {
+                addTerminalLine("Excellent! You've survived the raptor encounter!", "system");
+                addTerminalLine("Emergency evacuation helicopter dispatched", "system");
+            } else if (raptorProximity <= 30) {
+                addTerminalLine("GAME OVER: The raptors found you!", "error");
+                addTerminalLine("Clever girl...", "error");
+            } else {
+                addTerminalLine("Assessment failed - study harder next time!", "warning");
+            }
+            
+            addTerminalLine("root@isla-nublar:~$ logout", "prompt");
+            
+            setTimeout(() => {
+                const restart = document.createElement('button');
+                restart.textContent = 'RESTART SYSTEM';
+                restart.style.cssText = 'background: #004400; color: #00ff00; border: 1px solid #00ff00; padding: 10px; font-family: Courier Prime, monospace; margin: 10px 0;';
+                restart.onclick = () => location.reload();
+                document.getElementById('question-area').appendChild(restart);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

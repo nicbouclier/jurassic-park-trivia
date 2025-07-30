@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jurassic Park - Dinosaur Containment Protocol</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            font-family: 'Orbitron', monospace;
+            height: 100vh;
+            overflow: hidden;
+            color: #00ff00;
+            cursor: none;
+        }
+        
+        /* TV-style scan lines */
+        .screen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 0, 0.02) 2px,
+                    rgba(0, 255, 0, 0.02) 4px
+                );
+            pointer-events: none;
+            z-index: 1000;
+            animation: screenFlicker 3s linear infinite;
+        }
+        
+        @keyframes screenFlicker {
+            0%, 98% { opacity: 1; }
+            99%, 100% { opacity: 0.95; }
+        }
+        
+        .main-interface {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            height: 100vh;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        /* Movie-style park map */
+        .park-map-container {
+            background: 
+                linear-gradient(45deg, #001122 0%, #002244 100%);
+            border: 4px solid #00ffff;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .map-header {
+            background: linear-gradient(90deg, #004466, #002244);
+            color: #00ffff;
+            padding: 15px;
+            font-size: 24px;
+            font-weight: 900;
+            text-align: center;
+            border-bottom: 2px solid #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+        }
+        
+        .isla-nublar-map {
+            position: relative;
+            height: calc(100% - 70px);
+            background: 
+                radial-gradient(ellipse at center, #002244 20%, #001122 80%);
+            overflow: hidden;
+        }
+        
+        /* Authentic wireframe grid like the movie */
+        .wireframe-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.3) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridPulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes gridPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+        
+        /* Island outline like in the movie */
+        .island-outline {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 80%;
+            height: 80%;
+            border: 3px solid #00ff00;
+            border-radius: 40% 60% 60% 40%;
+            background: rgba(0, 100, 0, 0.1);
+            animation: islandGlow 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes islandGlow {
+            from { box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.3); }
+            to { box-shadow: inset 0 0 30px rgba(0, 255, 0, 0.5); }
+        }
+        
+        /* Park sectors positioned like the movie */
+        .park-sector {
+            position: absolute;
+            border: 2px solid;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            animation: sectorPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes sectorPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .visitor-center {
+            top: 45%;
+            left: 40%;
+            width: 120px;
+            height: 60px;
+            border-color: #ffff00;
+            color: #ffff00;
+            text-shadow: 0 0 8px #ffff00;
+        }
+        
+        .raptor-pen {
+            top: 25%;
+            left: 25%;
+            width: 100px;
+            height: 50px;
+            border-color: #ff0000;
+            color: #ff0000;
+            text-shadow: 0 0 8px #ff0000;
+        }
+        
+        .trex-paddock {
+            top: 60%;
+            left: 20%;
+            width: 140px;
+            height: 70px;
+            border-color: #ff8800;
+            color: #ff8800;
+            text-shadow: 0 0 8px #ff8800;
+        }
+        
+        .herbivore-valley {
+            top: 30%;
+            left: 60%;
+            width: 120px;
+            height: 80px;
+            border-color: #00ff88;
+            color: #00ff88;
+            text-shadow: 0 0 8px #00ff88;
+        }
+        
+        .dilophosaurus-forest {
+            top: 65%;
+            left: 60%;
+            width: 110px;
+            height: 60px;
+            border-color: #8844ff;
+            color: #8844ff;
+            text-shadow: 0 0 8px #8844ff;
+        }
+        
+        /* Containment breach indicators */
+        .breach-indicator {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #00ff00;
+            border: 2px solid #00ff00;
+            border-radius: 50%;
+            animation: secureGlow 2s ease-in-out infinite;
+        }
+        
+        .breach-indicator.breached {
+            background: #ff0000;
+            border-color: #ff0000;
+            animation: breachAlarm 0.5s ease-in-out infinite;
+        }
+        
+        @keyframes secureGlow {
+            0%, 100% { box-shadow: 0 0 10px #00ff00; }
+            50% { box-shadow: 0 0 20px #00ff00; }
+        }
+        
+        @keyframes breachAlarm {
+            0%, 100% { 
+                box-shadow: 0 0 30px #ff0000;
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 50px #ff0000;
+                transform: scale(1.3);
+            }
+        }
+        
+        /* Breach indicators positioned around sectors */
+        .breach-1 { top: 20%; left: 32%; }
+        .breach-2 { top: 35%; left: 32%; }
+        .breach-3 { top: 55%; left: 15%; }
+        .breach-4 { top: 75%; left: 28%; }
+        .breach-5 { top: 25%; left: 70%; }
+        .breach-6 { top: 70%; left: 75%; }
+        
+        /* Control panel */
+        .control-panel {
+            background: linear-gradient(180deg, #003366, #001144);
+            border: 4px solid #00ffff;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-header {
+            background: linear-gradient(90deg, #004466, #002244);
+            color: #00ffff;
+            padding: 20px;
+            font-size: 20px;
+            font-weight: 900;
+            text-align: center;
+            border-bottom: 2px solid #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+        }
+        
+        .game-status {
+            padding: 30px 20px;
+            font-size: 18px;
+            line-height: 2;
+        }
+        
+        .status-ok { color: #00ff00; text-shadow: 0 0 8px #00ff00; }
+        .status-warning { color: #ffff00; text-shadow: 0 0 8px #ffff00; }
+        .status-critical { 
+            color: #ff0000; 
+            text-shadow: 0 0 8px #ff0000;
+            animation: criticalBlink 1s infinite;
+        }
+        
+        @keyframes criticalBlink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.5; }
+        }
+        
+        /* TV Remote style game area */
+        .game-area {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .dinosaur-display {
+            background: rgba(0, 0, 0, 0.8);
+            border: 3px solid #00ff00;
+            padding: 30px;
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .dinosaur-ascii {
+            font-size: 20px;
+            line-height: 1.2;
+            color: #00ff88;
+            margin: 20px 0;
+            text-shadow: 0 0 6px #00ff88;
+            font-family: monospace;
+        }
+        
+        .dinosaur-prompt {
+            font-size: 24px;
+            color: #ffffff;
+            margin-bottom: 30px;
+            text-shadow: 0 0 8px #ffffff;
+        }
+        
+        /* TV Remote navigation */
+        .nav-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .nav-option {
+            background: linear-gradient(145deg, #004466, #002244);
+            border: 3px solid #00ffff;
+            color: #ffffff;
+            padding: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-option.selected {
+            background: linear-gradient(145deg, #006688, #004466);
+            border-color: #ffff00;
+            color: #ffff00;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+        }
+        
+        .nav-option:hover {
+            background: linear-gradient(145deg, #005577, #003355);
+            transform: translateY(-2px);
+        }
+        
+        .nav-option.correct {
+            background: linear-gradient(145deg, #006600, #004400);
+            border-color: #00ff00;
+            color: #00ff00;
+            animation: correctPulse 1s ease;
+        }
+        
+        .nav-option.incorrect {
+            background: linear-gradient(145deg, #660000, #440000);
+            border-color: #ff0000;
+            color: #ff0000;
+            animation: incorrectShake 0.5s ease;
+        }
+        
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes incorrectShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .start-button {
+            background: linear-gradient(145deg, #ff6600, #cc4400);
+            border: 4px solid #ff8800;
+            color: #ffffff;
+            padding: 30px;
+            font-size: 24px;
+            font-weight: 900;
+            cursor: pointer;
+            text-shadow: 0 0 8px #ffffff;
+            transition: all 0.3s ease;
+        }
+        
+        .start-button:hover {
+            background: linear-gradient(145deg, #ff8800, #ff6600);
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 136, 0, 0.6);
+        }
+        
+        /* TV instructions */
+        .tv-instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #888888;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="screen-overlay"></div>
+    
+    <div class="main-interface">
+        <!-- Movie-style park map -->
+        <div class="park-map-container">
+            <div class="map-header">ISLA NUBLAR - CONTAINMENT STATUS</div>
+            <div class="isla-nublar-map">
+                <div class="wireframe-grid"></div>
+                <div class="island-outline"></div>
+                
+                <!-- Park sectors -->
+                <div class="park-sector visitor-center">VISITOR<br>CENTER</div>
+                <div class="park-sector raptor-pen">RAPTOR<br>PEN</div>
+                <div class="park-sector trex-paddock">T-REX<br>PADDOCK</div>
+                <div class="park-sector herbivore-valley">HERBIVORE<br>VALLEY</div>
+                <div class="park-sector dilophosaurus-forest">DILOPH.<br>FOREST</div>
+                
+                <!-- Containment breach indicators -->
+                <div class="breach-indicator breach-1" data-breach="1"></div>
+                <div class="breach-indicator breach-2" data-breach="2"></div>
+                <div class="breach-indicator breach-3" data-breach="3"></div>
+                <div class="breach-indicator breach-4" data-breach="4"></div>
+                <div class="breach-indicator breach-5" data-breach="5"></div>
+                <div class="breach-indicator breach-6" data-breach="6"></div>
+            </div>
+        </div>
+        
+        <!-- Control panel -->
+        <div class="control-panel">
+            <div class="panel-header">DINO IDENTIFICATION PROTOCOL</div>
+            
+            <div class="game-status">
+                <div>SCORE: <span id="score" class="status-ok">0</span>/10</div>
+                <div>ROUND: <span id="round">0</span>/10</div>
+                <div>BREACHES: <span id="breaches" class="status-ok">0</span></div>
+                <div id="security-status" class="status-ok">SECURE</div>
+            </div>
+            
+            <div class="game-area">
+                <div id="game-content">
+                    <div class="dinosaur-display">
+                        <div class="dinosaur-prompt">EMERGENCY PROTOCOL ACTIVATED</div>
+                        <div style="color: #ffff00; font-size: 18px; margin: 20px 0;">
+                            Dinosaurs are breaching containment!<br>
+                            Identify each species to restore security locks.
+                        </div>
+                        <button class="start-button" onclick="startProtocol()">
+                            INITIATE IDENTIFICATION PROTOCOL
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tv-instructions">
+        Use ARROW KEYS to navigate • ENTER to select • Perfect for TV remotes!
+    </div>
+
+    <script>
+        const dinosaurData = [
+            {
+                name: "Tyrannosaurus Rex",
+                ascii: `        ████████████
+       ██          ██
+      ██    ████    ██
+     ██    ██  ██    ██
+    ██████████████████
+   ██                ██
+  ██    ████████████  ██
+ ██   ██          ██  ██
+██   ██            ██  ██
+██  ██              ██ ██
+███████            █████
+      ██████████████`,
+                options: ["Tyrannosaurus Rex", "Allosaurus", "Giganotosaurus", "Carnotaurus"],
+                correct: 0,
+                sector: "T-Rex Paddock",
+                breach: 3
+            },
+            {
+                name: "Velociraptor",
+                ascii: `     ████████
+    ██      ██
+   ██  ████  ██
+  ██  ██  ██  ██
+ ████████████████
+██              ██
+██    ████████  ██
+██  ██        ████
+███████      ████
+      ████████
+        ████
+         ██`,
+                options: ["Deinonychus", "Velociraptor", "Utahraptor", "Compsognathus"],
+                correct: 1,
+                sector: "Raptor Pen",
+                breach: 1
+            },
+            {
+                name: "Triceratops",
+                ascii: `████████████████████
+██                ██
+██  ████    ████  ██
+██  ████    ████  ██
+██                ██
+████████████████████
+      ██    ██
+      ██    ██
+      ██    ██
+    ████    ████
+   ██████  ██████
+  ████████████████`,
+                options: ["Styracosaurus", "Triceratops", "Pentaceratops", "Protoceratops"],
+                correct: 1,
+                sector: "Herbivore Valley",
+                breach: 5
+            },
+            {
+                name: "Brachiosaurus",
+                ascii: `              ████
+             ██  ██
+            ██    ██
+           ██      ██
+          ██        ██
+    ████████        ██
+   ██              ██
+  ██              ██
+ ██            ████
+██          ████
+██        ████
+████████████
+██      ██
+██      ██`,
+                options: ["Diplodocus", "Apatosaurus", "Brachiosaurus", "Camarasaurus"],
+                correct: 2,
+                sector: "Herbivore Valley",
+                breach: 5
+            },
+            {
+                name: "Dilophosaurus",
+                ascii: `    ████  ████
+   ██  ████  ██
+  ██          ██
+ ██    ████    ██
+██    ██  ██    ██
+██████████████████
+██              ██
+██    ████████  ██
+███████      ████
+     ████████
+       ████
+        ██`,
+                options: ["Dilophosaurus", "Coelophysis", "Ceratosaurus", "Monolophosaurus"],
+                correct: 0,
+                sector: "Dilophosaurus Forest",
+                breach: 6
+            },
+            {
+                name: "Gallimimus",
+                ascii: `        ████
+       ██  ██
+      ██    ██
+     ██      ██
+    ██        ██
+   ██          ██
+  ██████████████
+ ██            ██
+██              ██
+██    ██    ██  ██
+███████    ███████
+      ████████`,
+                options: ["Ornithomimus", "Struthiomimus", "Gallimimus", "Dromiceiomimus"],
+                correct: 2,
+                sector: "Herbivore Valley",
+                breach: 5
+            },
+            {
+                name: "Parasaurolophus",
+                ascii: `████████████████
+██            ██
+██  ████████  ██
+██  ██    ██  ██
+██  ██    ██  ██
+████████████████
+      ██  ██
+      ██  ██
+    ████  ████
+   ██████████
+  ████████████
+ ██████████████`,
+                options: ["Lambeosaurus", "Parasaurolophus", "Corythosaurus", "Maiasaura"],
+                correct: 1,
+                sector: "Herbivore Valley",
+                breach: 5
+            },
+            {
+                name: "Compsognathus",
+                ascii: `      ████
+     ██  ██
+    ██    ██
+   ██      ██
+  ████████████
+ ██          ██
+██     ████   ██
+██████    █████
+     ████████
+       ████
+        ██`,
+                options: ["Compsognathus", "Microraptor", "Procompsognathus", "Sinosauropteryx"],
+                correct: 0,
+                sector: "Visitor Center",
+                breach: 2
+            },
+            {
+                name: "Stegosaurus",
+                ascii: `████  ████  ████  ████
+██  ██  ██  ██  ██
+██    ██  ██    ██
+████████████████████
+██                ██
+██    ████████    ██
+██  ██        ██  ██
+████            ████
+  ████        ████
+    ████████████`,
+                options: ["Kentrosaurus", "Tuojiangosaurus", "Stegosaurus", "Lexovisaurus"],
+                correct: 2,
+                sector: "Herbivore Valley",
+                breach: 5
+            },
+            {
+                name: "Spinosaurus",
+                ascii: `████████████████████
+█ █ █ █ █ █ █ █ █ █
+██  ██  ██  ██  ██
+████████████████████
+██              ██
+██    ████████  ██
+██  ██        ████
+███████      ████
+     ████████
+       ████
+        ██`,
+                options: ["Baryonyx", "Suchomimus", "Spinosaurus", "Irritator"],
+                correct: 2,
+                sector: "Restricted Zone",
+                breach: 4
+            }
+        ];
+
+        let currentRound = 0;
+        let score = 0;
+        let breaches = 0;
+        let selectedOption = 0;
+        let gameActive = false;
+        let currentDinosaur = null;
+
+        function startProtocol() {
+            gameActive = true;
+            currentRound = 0;
+            score = 0;
+            breaches = 0;
+            selectedOption = 0;
+            
+            // Reset all breach indicators
+            document.querySelectorAll('.breach-indicator').forEach(indicator => {
+                indicator.classList.remove('breached');
+            });
+            
+            updateStatus();
+            showNextDinosaur();
+        }
+
+        function showNextDinosaur() {
+            if (currentRound >= dinosaurData.length) {
+                endGame();
+                return;
+            }
+
+            currentDinosaur = dinosaurData[currentRound];
+            selectedOption = 0;
+            
+            const gameContent = document.getElementById('game-content');
+            gameContent.innerHTML = `
+                <div class="dinosaur-display">
+                    <div class="dinosaur-prompt">IDENTIFY THIS DINOSAUR</div>
+                    <div class="dinosaur-ascii">${currentDinosaur.ascii}</div>
+                    <div style="color: #ffff00; font-size: 16px; margin-bottom: 20px;">
+                        Breach detected in: ${currentDinosaur.sector}
+                    </div>
+                </div>
+                <div class="nav-options" id="nav-options">
+                    ${currentDinosaur.options.map((option, index) => 
+                        `<div class="nav-option ${index === 0 ? 'selected' : ''}" data-index="${index}">
+                            ${String.fromCharCode(65 + index)}: ${option}
+                        </div>`
+                    ).join('')}
+                </div>
+            `;
+            
+            updateNavigation();
+        }
+
+        function updateNavigation() {
+            const options = document.querySelectorAll('.nav-option');
+            options.forEach((option, index) => {
+                option.classList.toggle('selected', index === selectedOption);
+            });
+        }
+
+        function selectAnswer() {
+            if (!gameActive) return;
+
+            const options = document.querySelectorAll('.nav-option');
+            const isCorrect = selectedOption === currentDinosaur.correct;
+            
+            // Show correct/incorrect feedback
+            options[selectedOption].classList.add(isCorrect ? 'correct' : 'incorrect');
+            if (!isCorrect) {
+                options[currentDinosaur.correct].classList.add('correct');
+            }
+            
+            // Disable navigation
+            gameActive = false;
+            
+            if (isCorrect) {
+                score++;
+            } else {
+                // Trigger breach
+                breaches++;
+                const breachIndicator = document.querySelector(`.breach-${currentDinosaur.breach}`);
+                if (breachIndicator) {
+                    breachIndicator.classList.add('breached');
+                }
+            }
+            
+            updateStatus();
+            
+            setTimeout(() => {
+                currentRound++;
+                gameActive = true;
+                showNextDinosaur();
+            }, 3000);
+        }
+
+        function updateStatus() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('round').textContent = Math.min(currentRound + 1, dinosaurData.length);
+            document.getElementById('breaches').textContent = breaches;
+            
+            const breachesElement = document.getElementById('breaches');
+            const statusElement = document.getElementById('security-status');
+            
+            if (breaches === 0) {
+                breachesElement.className = 'status-ok';
+                statusElement.textContent = 'ALL SECURE';
+                statusElement.className = 'status-ok';
+            } else if (breaches <= 3) {
+                breachesElement.className = 'status-warning';
+                statusElement.textContent = 'MINOR BREACHES';
+                statusElement.className = 'status-warning';
+            } else {
+                breachesElement.className = 'status-critical';
+                statusElement.textContent = 'CRITICAL FAILURE';
+                statusElement.className = 'status-critical';
+            }
+        }
+
+        function endGame() {
+            const percentage = Math.round((score / dinosaurData.length) * 100);
+            let message, statusClass;
+            
+            if (percentage >= 90 && breaches <= 1) {
+                message = "EXCELLENT WORK!\nAll dinosaurs contained successfully.";
+                statusClass = 'status-ok';
+            } else if (percentage >= 70 && breaches <= 3) {
+                message = "GOOD PERFORMANCE\nMinor security breaches detected.";
+                statusClass = 'status-warning';
+            } else {
+                message = "PROTOCOL FAILED\nMultiple containment breaches!";
+                statusClass = 'status-critical';
+            }
+            
+            const gameContent = document.getElementById('game-content');
+            gameContent.innerHTML = `
+                <div class="dinosaur-display">
+                    <div class="dinosaur-prompt ${statusClass}">PROTOCOL COMPLETE</div>
+                    <div style="color: #ffffff; font-size: 18px; margin: 20px 0; white-space: pre-line;">
+                        ${message}
+                    </div>
+                    <div style="color: #00ffff; font-size: 20px; margin: 20px 0;">
+                        Final Score: ${score}/${dinosaurData.length} (${percentage}%)
+                    </div>
+                    <button class="start-button" onclick="startProtocol()">
+                        RESTART PROTOCOL
+                    </button>
+                </div>
+            `;
+        }
+
+        // TV Remote controls
+        document.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
+            
+            switch(e.key) {
+                case 'ArrowLeft':
+                    selectedOption = Math.max(0, selectedOption - 1);
+                    updateNavigation();
+                    break;
+                case 'ArrowRight':
+                    selectedOption = Math.min(3, selectedOption + 1);
+                    updateNavigation();
+                    break;
+                case 'ArrowUp':
+                    selectedOption = selectedOption < 2 ? selectedOption : selectedOption - 2;
+                    updateNavigation();
+                    break;
+                case 'ArrowDown':
+                    selectedOption = selectedOption > 1 ? selectedOption : selectedOption + 2;
+                    updateNavigation();
+                    break;
+                case 'Enter':
+                case ' ':
+                    selectAnswer();
+                    break;
+            }
+        });
+
+        // Click support for non-TV use
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('nav-option') && gameActive) {
+                selectedOption = parseInt(e.target.dataset.index);
+                updateNavigation();
+                setTimeout(() => selectAnswer(), 100);
+            }
+        });
+
+        // Initialize
+        updateStatus();
+    </script>
+</body>
+</html>

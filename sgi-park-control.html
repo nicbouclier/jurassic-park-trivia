@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jurassic Park - Main Security Interface</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #2d4a5e 0%, #1a2f3a 50%, #0f1f28 100%);
+            font-family: 'IBM Plex Mono', monospace;
+            height: 100vh;
+            overflow: hidden;
+            color: #e0e0e0;
+        }
+        
+        .sgi-desktop {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(64, 224, 208, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 140, 0, 0.1) 0%, transparent 50%),
+                linear-gradient(135deg, #2d4a5e 0%, #1a2f3a 100%);
+        }
+        
+        .window {
+            position: absolute;
+            background: linear-gradient(145deg, #4a6b7c 0%, #3a5b6c 100%);
+            border: 2px outset #5a7b8c;
+            border-radius: 4px;
+            box-shadow: 
+                inset 1px 1px 2px rgba(255,255,255,0.2),
+                inset -1px -1px 2px rgba(0,0,0,0.3),
+                4px 4px 12px rgba(0,0,0,0.4);
+        }
+        
+        .title-bar {
+            background: linear-gradient(145deg, #6a8b9c 0%, #5a7b8c 100%);
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #ffffff;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+            border-bottom: 1px solid #7a9bac;
+        }
+        
+        .park-map-window {
+            top: 20px;
+            left: 20px;
+            width: 700px;
+            height: 500px;
+        }
+        
+        .park-map {
+            background: #1a1a2e;
+            height: calc(100% - 40px);
+            position: relative;
+            overflow: hidden;
+            border: 1px inset #4a6b7c;
+        }
+        
+        .grid-overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.3;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.2) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        
+        .park-sector {
+            position: absolute;
+            border: 2px solid #00ffff;
+            background: rgba(0, 255, 255, 0.05);
+            color: #00ffff;
+            font-size: 10px;
+            text-align: center;
+            padding: 4px;
+            text-shadow: 0 0 4px #00ffff;
+        }
+        
+        .visitor-center {
+            top: 180px;
+            left: 300px;
+            width: 120px;
+            height: 80px;
+            border-color: #ffff00;
+            background: rgba(255, 255, 0, 0.1);
+            color: #ffff00;
+            text-shadow: 0 0 4px #ffff00;
+        }
+        
+        .raptor-pen {
+            top: 100px;
+            left: 150px;
+            width: 100px;
+            height: 60px;
+            border-color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
+            color: #ff4444;
+            text-shadow: 0 0 4px #ff4444;
+        }
+        
+        .t-rex-paddock {
+            top: 300px;
+            left: 100px;
+            width: 140px;
+            height: 100px;
+            border-color: #ff8800;
+            background: rgba(255, 136, 0, 0.1);
+            color: #ff8800;
+            text-shadow: 0 0 4px #ff8800;
+        }
+        
+        .dilophosaurus-area {
+            top: 120px;
+            left: 450px;
+            width: 110px;
+            height: 70px;
+            border-color: #8844ff;
+            background: rgba(136, 68, 255, 0.1);
+            color: #8844ff;
+            text-shadow: 0 0 4px #8844ff;
+        }
+        
+        .gate {
+            position: absolute;
+            width: 8px;
+            height: 30px;
+            background: #00ff00;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 8px #00ff00;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        
+        .gate.open {
+            background: #ff0000;
+            box-shadow: 0 0 12px #ff0000;
+            animation: danger-pulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes danger-pulse {
+            0%, 100% { opacity: 1; transform: scaleY(1); }
+            50% { opacity: 0.5; transform: scaleY(0.3); }
+        }
+        
+        .gate-1 { top: 130px; left: 200px; }
+        .gate-2 { top: 130px; left: 230px; }
+        .gate-3 { top: 350px; left: 150px; }
+        .gate-4 { top: 350px; left: 180px; }
+        .gate-5 { top: 150px; left: 500px; }
+        .gate-6 { top: 150px; left: 530px; }
+        
+        .system-status-window {
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            height: 500px;
+        }
+        
+        .status-panel {
+            background: #0f1f28;
+            height: calc(100% - 40px);
+            padding: 15px;
+            font-size: 11px;
+            line-height: 1.4;
+            border: 1px inset #4a6b7c;
+        }
+        
+        .status-line {
+            margin: 5px 0;
+            padding: 3px 0;
+        }
+        
+        .status-ok {
+            color: #00ff00;
+            text-shadow: 0 0 3px #00ff00;
+        }
+        
+        .status-warning {
+            color: #ffff00;
+            text-shadow: 0 0 3px #ffff00;
+        }
+        
+        .status-critical {
+            color: #ff0000;
+            text-shadow: 0 0 3px #ff0000;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+        
+        .quiz-window {
+            bottom: 20px;
+            left: 20px;
+            width: 700px;
+            height: 200px;
+        }
+        
+        .quiz-panel {
+            background: #0f1f28;
+            height: calc(100% - 40px);
+            padding: 15px;
+            border: 1px inset #4a6b7c;
+            overflow-y: auto;
+        }
+        
+        .question-text {
+            color: #ffffff;
+            font-size: 13px;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .option-button {
+            background: linear-gradient(145deg, #3a5b6c 0%, #2a4b5c 100%);
+            border: 1px outset #4a6b7c;
+            color: #e0e0e0;
+            padding: 8px 12px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+        
+        .option-button:hover {
+            background: linear-gradient(145deg, #4a6b7c 0%, #3a5b6c 100%);
+            transform: translateY(-1px);
+        }
+        
+        .option-button:active {
+            border: 1px inset #4a6b7c;
+            transform: translateY(1px);
+        }
+        
+        .option-button.correct {
+            background: linear-gradient(145deg, #2a6a2a 0%, #1a5a1a 100%);
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+        
+        .option-button.incorrect {
+            background: linear-gradient(145deg, #6a2a2a 0%, #5a1a1a 100%);
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+        
+        .start-button {
+            background: linear-gradient(145deg, #ff8800 0%, #dd6600 100%);
+            border: 2px outset #ffaa00;
+            color: #ffffff;
+            padding: 12px 24px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            margin: 20px auto;
+            display: block;
+        }
+        
+        .start-button:hover {
+            background: linear-gradient(145deg, #ffaa00 0%, #ff8800 100%);
+        }
+        
+        .start-button:active {
+            border: 2px inset #ffaa00;
+        }
+        
+        .progress-bar {
+            background: #1a1a2e;
+            border: 1px inset #4a6b7c;
+            height: 20px;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #00ff00 0%, #ffff00 50%, #ff0000 100%);
+            height: 100%;
+            width: 100%;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10px;
+            font-weight: 600;
+            color: #000;
+            text-shadow: none;
+        }
+        
+        .alert-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(145deg, #6a2a2a 0%, #5a1a1a 100%);
+            border: 3px outset #ff4444;
+            padding: 30px;
+            text-align: center;
+            color: #ff4444;
+            font-size: 14px;
+            font-weight: 600;
+            text-shadow: 0 0 8px #ff4444;
+            z-index: 1000;
+            display: none;
+            animation: alert-pulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes alert-pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+    <div class="sgi-desktop">
+        <!-- Park Map Window -->
+        <div class="window park-map-window">
+            <div class="title-bar">Jurassic Park - Facility Security Grid</div>
+            <div class="park-map">
+                <div class="grid-overlay"></div>
+                
+                <!-- Park Sectors -->
+                <div class="park-sector visitor-center">
+                    VISITOR<br>CENTER
+                </div>
+                <div class="park-sector raptor-pen">
+                    RAPTOR<br>PEN A
+                </div>
+                <div class="park-sector t-rex-paddock">
+                    T-REX<br>PADDOCK
+                </div>
+                <div class="park-sector dilophosaurus-area">
+                    DILOPH.<br>SECTOR
+                </div>
+                
+                <!-- Security Gates -->
+                <div class="gate gate-1" data-gate="1" title="Raptor Pen Gate A"></div>
+                <div class="gate gate-2" data-gate="2" title="Raptor Pen Gate B"></div>
+                <div class="gate gate-3" data-gate="3" title="T-Rex Paddock Main Gate"></div>
+                <div class="gate gate-4" data-gate="4" title="T-Rex Paddock Service Gate"></div>
+                <div class="gate gate-5" data-gate="5" title="Dilophosaurus Containment"></div>
+                <div class="gate gate-6" data-gate="6" title="Emergency Perimeter"></div>
+            </div>
+        </div>
+        
+        <!-- System Status Window -->
+        <div class="window system-status-window">
+            <div class="title-bar">System Status - InGen Security</div>
+            <div class="status-panel">
+                <div class="status-line status-ok">POWER GRID: OPERATIONAL</div>
+                <div class="status-line status-ok">COMMUNICATIONS: ONLINE</div>
+                <div class="status-line status-ok" id="gate-status">SECURITY GATES: ALL SECURE</div>
+                <div class="status-line status-warning">USER: D.NEDRY - RESTRICTED ACCESS</div>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" id="security-integrity"></div>
+                    <div class="progress-text">SECURITY INTEGRITY: <span id="integrity-percent">100</span>%</div>
+                </div>
+                
+                <div style="margin-top: 20px; color: #00ffff;">
+                    <div>SCORE: <span id="score-display">0</span>/10</div>
+                    <div>QUESTION: <span id="question-counter">0</span>/10</div>
+                </div>
+                
+                <div id="breach-log" style="margin-top: 20px; font-size: 10px;">
+                    <div style="color: #ffff00;">SECURITY LOG:</div>
+                    <div id="log-entries"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quiz Window -->
+        <div class="window quiz-window">
+            <div class="title-bar">Knowledge Assessment Terminal</div>
+            <div class="quiz-panel">
+                <div id="quiz-content">
+                    <div style="text-align: center; color: #00ffff; margin: 20px 0;">
+                        <div style="font-size: 14px; margin-bottom: 10px;">JURASSIC PARK SECURITY ASSESSMENT</div>
+                        <div style="font-size: 11px; margin-bottom: 20px;">Complete assessment to maintain system access</div>
+                        <button class="start-button" onclick="startAssessment()">BEGIN ASSESSMENT</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Alert Box -->
+        <div id="alert-box" class="alert-box">
+            <div id="alert-message"></div>
+            <button class="start-button" onclick="closeAlert()" style="margin-top: 15px;">ACKNOWLEDGE</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "What is the name of the island where Jurassic Park is located?",
+                options: ["Isla Nublar", "Isla Sorna", "Isla Muerta", "Isla Verde"],
+                correct: 0,
+                breach: "Perimeter sensors compromised"
+            },
+            {
+                question: "Who is the chief programmer of Jurassic Park's computer systems?",
+                options: ["Ray Arnold", "Dennis Nedry", "John Hammond", "Robert Muldoon"],
+                correct: 1,
+                breach: "Access control bypassed"
+            },
+            {
+                question: "What does Dennis Nedry need to complete his sabotage?",
+                options: ["Magic word", "Admin password", "DNA samples", "Security codes"],
+                correct: 2,
+                breach: "Cryogenic storage accessed"
+            },
+            {
+                question: "Which area has the most dangerous security breach potential?",
+                options: ["Visitor Center", "Raptor Pen", "Gift Shop", "Laboratory"],
+                correct: 1,
+                breach: "Containment protocols failing"
+            },
+            {
+                question: "What computer system runs the park's security?",
+                options: ["Windows NT", "UNIX System", "DOS", "Mac OS"],
+                correct: 1,
+                breach: "System privileges escalated"
+            },
+            {
+                question: "Who says 'Hold on to your butts' before rebooting the system?",
+                options: ["John Hammond", "Ray Arnold", "Ian Malcolm", "Alan Grant"],
+                correct: 1,
+                breach: "Power grid destabilized"
+            },
+            {
+                question: "What is the main weakness of the park's security system?",
+                options: ["Power dependence", "Human error", "Network vulnerability", "All of the above"],
+                correct: 3,
+                breach: "Multiple system failures"
+            },
+            {
+                question: "Which dinosaur is NOT secured by the main fence system?",
+                options: ["T-Rex", "Triceratops", "Velociraptors", "Dilophosaurus"],
+                correct: 1,
+                breach: "Herbivore paddock breach"
+            },
+            {
+                question: "What happens when Nedry tries to access the embryo storage?",
+                options: ["System crash", "'Ah ah ah' message", "Silent alarm", "Immediate access"],
+                correct: 1,
+                breach:""
+            },
+            {
+                question: "How many minutes until auxiliary power kicks in after main power loss?",
+                options: ["5 minutes", "10 minutes", "13 minutes", "20 minutes"],
+                correct: 2,
+                breach: "Backup systems failing"
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let securityIntegrity = 100;
+        let openGates = [];
+        let gameActive = false;
+
+        function startAssessment() {
+            gameActive = true;
+            currentQuestion = 0;
+            score = 0;
+            securityIntegrity = 100;
+            openGates = [];
+            
+            // Reset all gates
+            document.querySelectorAll('.gate').forEach(gate => {
+                gate.classList.remove('open');
+            });
+            
+            updateDisplay();
+            showNextQuestion();
+        }
+
+        function showNextQuestion() {
+            if (currentQuestion >= questions.length) {
+                endAssessment();
+                return;
+            }
+
+            const q = questions[currentQuestion];
+            const quizContent = document.getElementById('quiz-content');
+            
+            quizContent.innerHTML = `
+                <div class="question-text">
+                    QUESTION ${currentQuestion + 1}/10: ${q.question}
+                </div>
+                <div class="options-grid" id="options-grid">
+                    ${q.options.map((option, index) => 
+                        `<button class="option-button" onclick="selectAnswer(${index})">
+                            ${String.fromCharCode(65 + index)}: ${option}
+                        </button>`
+                    ).join('')}
+                </div>
+            `;
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (!gameActive) return;
+
+            const q = questions[currentQuestion];
+            const options = document.querySelectorAll('.option-button');
+            
+            // Disable all options
+            options.forEach(option => option.style.pointerEvents = 'none');
+
+            if (selectedIndex === q.correct) {
+                // Correct answer
+                options[selectedIndex].classList.add('correct');
+                score++;
+                addLogEntry(`CORRECT: Access granted for question ${currentQuestion + 1}`, 'ok');
+            } else {
+                // Wrong answer - security breach!
+                options[selectedIndex].classList.add('incorrect');
+                options[q.correct].classList.add('correct');
+                
+                securityIntegrity -= 15;
+                breachSecurity(q.breach);
+                
+                addLogEntry(`INCORRECT: ${q.breach}`, 'critical');
+            }
+
+            updateDisplay();
+
+            setTimeout(() => {
+                currentQuestion++;
+                showNextQuestion();
+            }, 3000);
+        }
+
+        function breachSecurity(breachType) {
+            // Open a random gate that isn't already open
+            const closedGates = Array.from(document.querySelectorAll('.gate:not(.open)'));
+            
+            if (closedGates.length > 0) {
+                const randomGate = closedGates[Math.floor(Math.random() * closedGates.length)];
+                randomGate.classList.add('open');
+                
+                const gateNum = randomGate.dataset.gate;
+                openGates.push(gateNum);
+                
+                // Show alert
+                showAlert(`SECURITY BREACH: Gate ${gateNum} opened!<br>${breachType}`);
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('score-display').textContent = score;
+            document.getElementById('question-counter').textContent = Math.min(currentQuestion + 1, questions.length);
+            document.getElementById('integrity-percent').textContent = Math.max(0, securityIntegrity);
+            document.getElementById('security-integrity').style.width = Math.max(0, securityIntegrity) + '%';
+            
+            // Update gate status
+            const gateStatus = document.getElementById('gate-status');
+            if (openGates.length === 0) {
+                gateStatus.textContent = 'SECURITY GATES: ALL SECURE';
+                gateStatus.className = 'status-line status-ok';
+            } else if (openGates.length <= 2) {
+                gateStatus.textContent = `SECURITY GATES: ${openGates.length} BREACH${openGates.length > 1 ? 'ES' : ''}`;
+                gateStatus.className = 'status-line status-warning';
+            } else {
+                gateStatus.textContent = `SECURITY GATES: CRITICAL - ${openGates.length} BREACHES`;
+                gateStatus.className = 'status-line status-critical';
+            }
+        }
+
+        function addLogEntry(message, type) {
+            const logEntries = document.getElementById('log-entries');
+            const entry = document.createElement('div');
+            entry.className = `status-line status-${type}`;
+            entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logEntries.appendChild(entry);
+            
+            // Keep only last 8 entries
+            while (logEntries.children.length > 8) {
+                logEntries.removeChild(logEntries.firstChild);
+            }
+            
+            logEntries.scrollTop = logEntries.scrollHeight;
+        }
+
+        function showAlert(message) {
+            document.getElementById('alert-message').innerHTML = message;
+            document.getElementById('alert-box').style.display = 'block';
+        }
+
+        function closeAlert() {
+            document.getElementById('alert-box').style.display = 'none';
+        }
+
+        function endAssessment() {
+            gameActive = false;
+            const percentage = Math.round((score / questions.length) * 100);
+            
+            let endMessage;
+            if (percentage >= 80 && openGates.length <= 2) {
+                endMessage = `ASSESSMENT COMPLETE<br>Score: ${score}/10 (${percentage}%)<br>Security Status: ACCEPTABLE<br>Access maintained.`;
+            } else if (openGates.length >= 5) {
+                endMessage = `CRITICAL SYSTEM FAILURE<br>Score: ${score}/10 (${percentage}%)<br>Multiple containment breaches detected.<br>Initiating emergency protocols...`;
+            } else {
+                endMessage = `ASSESSMENT FAILED<br>Score: ${score}/10 (${percentage}%)<br>Security compromised: ${openGates.length} breach${openGates.length !== 1 ? 'es' : ''}<br>Restricted access activated.`;
+            }
+            
+            showAlert(endMessage);
+            
+            const quizContent = document.getElementById('quiz-content');
+            quizContent.innerHTML = `
+                <div style="text-align: center; color: #00ffff; margin: 20px 0;">
+                    <div style="font-size: 12px; margin-bottom: 20px;">Assessment Complete</div>
+                    <button class="start-button" onclick="startAssessment()">RESTART ASSESSMENT</button>
+                </div>
+            `;
+        }
+
+        // Initialize
+        updateDisplay();
+        addLogEntry('System initialized - Assessment ready', 'ok');
+    </script>
+</body>
+</html>

@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jurassic Park - System Maintenance Protocol</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #001122 0%, #002244 100%);
+            font-family: 'Orbitron', monospace;
+            height: 100vh;
+            overflow: hidden;
+            color: #00ff00;
+            user-select: none;
+        }
+        
+        /* Screen effects */
+        .screen-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 0, 0.02) 2px,
+                    rgba(0, 255, 0, 0.02) 4px
+                );
+            pointer-events: none;
+            z-index: 100;
+            animation: screenFlicker 4s linear infinite;
+        }
+        
+        @keyframes screenFlicker {
+            0%, 97% { opacity: 1; }
+            98%, 100% { opacity: 0.8; }
+        }
+        
+        .main-container {
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 500px;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        /* Park Systems Status */
+        .systems-panel {
+            background: linear-gradient(145deg, #003366, #001144);
+            border: 4px solid #00ffff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .systems-header {
+            background: linear-gradient(90deg, #004466, #002244);
+            color: #00ffff;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: 900;
+            text-align: center;
+            text-shadow: 0 0 10px #00ffff;
+            border-bottom: 3px solid #00ffff;
+        }
+        
+        .systems-list {
+            padding: 30px;
+            height: calc(100vh - 140px);
+            overflow-y: auto;
+        }
+        
+        .system-item {
+            background: rgba(0, 0, 0, 0.6);
+            border: 3px solid;
+            margin: 15px 0;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+        
+        .system-item.online {
+            border-color: #00ff00;
+            color: #00ff00;
+            text-shadow: 0 0 8px #00ff00;
+            animation: systemPulse 3s ease-in-out infinite;
+        }
+        
+        .system-item.warning {
+            border-color: #ffff00;
+            color: #ffff00;
+            text-shadow: 0 0 8px #ffff00;
+            animation: warningFlash 2s ease-in-out infinite;
+        }
+        
+        .system-item.critical {
+            border-color: #ff0000;
+            color: #ff0000;
+            text-shadow: 0 0 8px #ff0000;
+            animation: criticalAlarm 1s ease-in-out infinite;
+        }
+        
+        .system-item.failed {
+            border-color: #660000;
+            color: #660000;
+            background: rgba(100, 0, 0, 0.2);
+            text-shadow: none;
+            animation: none;
+        }
+        
+        @keyframes systemPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 0, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 0, 0.6); }
+        }
+        
+        @keyframes warningFlash {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 255, 0, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(255, 255, 0, 0.8); }
+        }
+        
+        @keyframes criticalAlarm {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 40px rgba(255, 0, 0, 1);
+                transform: scale(1.02);
+            }
+        }
+        
+        /* Game Panel */
+        .game-panel {
+            background: linear-gradient(145deg, #003366, #001144);
+            border: 4px solid #00ffff;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .game-header {
+            background: linear-gradient(90deg, #004466, #002244);
+            color: #00ffff;
+            padding: 20px;
+            font-size: 20px;
+            font-weight: 900;
+            text-align: center;
+            text-shadow: 0 0 10px #00ffff;
+            border-bottom: 3px solid #00ffff;
+        }
+        
+        .score-display {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            font-size: 18px;
+            text-align: center;
+            border-bottom: 2px solid #004466;
+        }
+        
+        .score-item {
+            margin: 8px 0;
+        }
+        
+        .score-current { color: #00ff00; text-shadow: 0 0 6px #00ff00; }
+        .score-high { color: #ffff00; text-shadow: 0 0 6px #ffff00; }
+        .score-danger { color: #ff0000; text-shadow: 0 0 6px #ff0000; }
+        
+        /* Question Area */
+        .question-area {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .question-text {
+            background: rgba(0, 0, 0, 0.8);
+            border: 3px solid #00ff00;
+            padding: 25px;
+            font-size: 18px;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            text-shadow: 0 0 6px #ffffff;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .answer-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .answer-btn {
+            background: linear-gradient(145deg, #004466, #002244);
+            border: 3px solid #00ffff;
+            color: #ffffff;
+            padding: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .answer-btn:hover {
+            background: linear-gradient(145deg, #005577, #003355);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        .answer-btn.selected {
+            background: linear-gradient(145deg, #006688, #004466);
+            border-color: #ffff00;
+            color: #ffff00;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+        }
+        
+        .answer-btn.correct {
+            background: linear-gradient(145deg, #006600, #004400);
+            border-color: #00ff00;
+            color: #00ff00;
+            animation: correctFlash 1s ease;
+        }
+        
+        .answer-btn.incorrect {
+            background: linear-gradient(145deg, #660000, #440000);
+            border-color: #ff0000;
+            color: #ff0000;
+            animation: incorrectShake 0.5s ease;
+        }
+        
+        @keyframes correctFlash {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 0, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(0, 255, 0, 1); }
+        }
+        
+        @keyframes incorrectShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        /* Start Screen */
+        .start-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(145deg, #003366, #001144);
+            border: 5px solid #00ffff;
+            padding: 50px;
+            text-align: center;
+            border-radius: 15px;
+            z-index: 500;
+        }
+        
+        .start-title {
+            font-size: 36px;
+            color: #00ffff;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px #00ffff;
+        }
+        
+        .start-subtitle {
+            font-size: 18px;
+            color: #ffffff;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        
+        .start-btn {
+            background: linear-gradient(145deg, #ff6600, #cc4400);
+            border: 4px solid #ff8800;
+            color: #ffffff;
+            padding: 20px 40px;
+            font-size: 20px;
+            font-weight: 900;
+            cursor: pointer;
+            border-radius: 10px;
+            font-family: 'Orbitron', monospace;
+            text-shadow: 0 0 8px #ffffff;
+            transition: all 0.3s ease;
+        }
+        
+        .start-btn:hover {
+            background: linear-gradient(145deg, #ff8800, #ff6600);
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 136, 0, 0.6);
+        }
+        
+        /* Warning Overlay */
+        .warning-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: warningPulse 0.5s ease-in-out infinite;
+        }
+        
+        @keyframes warningPulse {
+            0%, 100% { background: rgba(0, 0, 0, 0.9); }
+            50% { background: rgba(100, 0, 0, 0.7); }
+        }
+        
+        .warning-content {
+            background: linear-gradient(145deg, #660000, #440000);
+            border: 6px solid #ff0000;
+            padding: 60px;
+            text-align: center;
+            border-radius: 20px;
+            max-width: 600px;
+        }
+        
+        .warning-title {
+            font-size: 48px;
+            color: #ff0000;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #ff0000;
+            animation: warningGlow 1s ease-in-out infinite;
+        }
+        
+        .warning-message {
+            font-size: 24px;
+            color: #ffffff;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px #ffffff;
+        }
+        
+        @keyframes warningGlow {
+            0%, 100% { text-shadow: 0 0 20px #ff0000; }
+            50% { text-shadow: 0 0 40px #ff0000, 0 0 60px #ff0000; }
+        }
+        
+        /* Game Over Screen */
+        .game-over-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .game-over-content {
+            background: linear-gradient(145deg, #330000, #110000);
+            border: 8px solid #ff0000;
+            padding: 80px;
+            text-align: center;
+            border-radius: 25px;
+            max-width: 700px;
+        }
+        
+        .game-over-title {
+            font-size: 60px;
+            color: #ff0000;
+            margin-bottom: 30px;
+            text-shadow: 0 0 30px #ff0000;
+            animation: gameOverGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes gameOverGlow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .trex-ascii {
+            font-family: monospace;
+            font-size: 12px;
+            color: #ff4444;
+            margin: 30px 0;
+            line-height: 1;
+            text-shadow: 0 0 10px #ff4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="screen-effects"></div>
+    
+    <!-- Start Screen -->
+    <div id="start-screen" class="start-screen">
+        <div class="start-title">🦖 JURASSIC PARK 🦖</div>
+        <div class="start-subtitle">
+            System Maintenance Protocol<br>
+            Answer dinosaur questions to keep park systems online.<br>
+            Wrong answers cause system failures.<br>
+            <strong>How long can you survive before the T-Rex breaks out?</strong>
+        </div>
+        <button class="start-btn" onclick="startGame()">INITIALIZE PROTOCOL</button>
+    </div>
+    
+    <!-- Main Game Interface -->
+    <div class="main-container">
+        <!-- Park Systems Status -->
+        <div class="systems-panel">
+            <div class="systems-header">JURASSIC PARK - SYSTEM STATUS</div>
+            <div class="systems-list">
+                <div class="system-item online" id="system-1">🔋 MAIN POWER GRID - ONLINE</div>
+                <div class="system-item online" id="system-2">🔒 SECURITY FENCES - OPERATIONAL</div>
+                <div class="system-item online" id="system-3">📡 COMMUNICATION NETWORK - ACTIVE</div>
+                <div class="system-item online" id="system-4">⚡ BACKUP GENERATORS - STANDBY</div>
+                <div class="system-item online" id="system-5">🚨 EMERGENCY PROTOCOLS - READY</div>
+                <div class="system-item online" id="system-6">🔐 CONTAINMENT LOCKS - SECURED</div>
+                <div class="system-item online" id="system-7">📹 SECURITY CAMERAS - MONITORING</div>
+                <div class="system-item online" id="system-8">🌐 MOTION SENSORS - SCANNING</div>
+                <div class="system-item online" id="system-9">💻 CONTROL COMPUTERS - RESPONSIVE</div>
+                <div class="system-item online" id="system-10">🔧 MAINTENANCE SYSTEMS - AUTOMATED</div>
+                <div class="system-item critical" id="system-trex">🦖 T-REX CONTAINMENT - CRITICAL</div>
+            </div>
+        </div>
+        
+        <!-- Game Panel -->
+        <div class="game-panel">
+            <div class="game-header">DINOSAUR KNOWLEDGE ASSESSMENT</div>
+            <div class="score-display">
+                <div class="score-item">CURRENT SCORE: <span id="current-score" class="score-current">0</span></div>
+                <div class="score-item">HIGH SCORE: <span id="high-score" class="score-high">0</span></div>
+                <div class="score-item">DANGER LEVEL: <span id="danger-level" class="score-current">MINIMAL</span></div>
+                <div class="score-item">SYSTEMS FAILED: <span id="failed-systems" class="score-current">0/10</span></div>
+            </div>
+            <div class="question-area" id="question-area">
+                <div class="question-text" id="question-text">
+                    System ready. Click "INITIALIZE PROTOCOL" to begin.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Warning Overlay -->
+    <div id="warning-overlay" class="warning-overlay">
+        <div class="warning-content">
+            <div class="warning-title">⚠️ SYSTEM FAILURE ⚠️</div>
+            <div class="warning-message" id="warning-message"></div>
+        </div>
+    </div>
+    
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="game-over-screen">
+        <div class="game-over-content">
+            <div class="game-over-title">T-REX CONTAINMENT BREACH!</div>
+            <div class="trex-ascii">
+                    ████████████████
+                   ██              ██
+                  ██    ████████    ██
+                 ██    ██      ██    ██
+                ██████████████████████
+               ██                    ██
+              ██      ████████████    ██
+             ██     ██            ██  ██
+            ██     ██              ██  ██
+           ██     ██                ██ ██
+          ███████████              █████
+                ██████████████████████
+            </div>
+            <div style="font-size: 24px; color: #ffffff; margin: 30px 0;">
+                GAME OVER
+            </div>
+            <div style="font-size: 20px; color: #ffff00; margin: 20px 0;">
+                Final Score: <span id="final-score">0</span>
+            </div>
+            <div style="font-size: 16px; color: #ff8888; margin: 20px 0;">
+                <span id="final-message"></span>
+            </div>
+            <button class="start-btn" onclick="resetGame()">TRY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        const dinosaurQuestions = [
+            {
+                question: "How many teeth did a Tyrannosaurus Rex have?",
+                options: ["30", "50", "60", "80"],
+                correct: 2,
+                explanation: "T-Rex had about 60 teeth, each up to 8 inches long!"
+            },
+            {
+                question: "What does 'Velociraptor' mean?",
+                options: ["Fast hunter", "Swift seizer", "Quick killer", "Speed demon"],
+                correct: 1,
+                explanation: "Velociraptor means 'swift seizer' in Latin."
+            },
+            {
+                question: "How tall was a Brachiosaurus?",
+                options: ["20 feet", "30 feet", "40 feet", "50 feet"],
+                correct: 2,
+                explanation: "Brachiosaurus could reach heights of 40-50 feet!"
+            },
+            {
+                question: "What did Triceratops eat?",
+                options: ["Fish", "Other dinosaurs", "Plants", "Insects"],
+                correct: 2,
+                explanation: "Triceratops was a herbivore that ate plants and vegetation."
+            },
+            {
+                question: "How fast could a Velociraptor run?",
+                options: ["15 mph", "25 mph", "35 mph", "45 mph"],
+                correct: 1,
+                explanation: "Velociraptors could run up to 25 mph in short bursts."
+            },
+            {
+                question: "What period did dinosaurs live in?",
+                options: ["Jurassic only", "Cretaceous only", "Triassic only", "All three periods"],
+                correct: 3,
+                explanation: "Dinosaurs lived through the Triassic, Jurassic, and Cretaceous periods."
+            },
+            {
+                question: "How long was a full-grown T-Rex?",
+                options: ["20 feet", "30 feet", "40 feet", "50 feet"],
+                correct: 2,
+                explanation: "Adult T-Rex could reach 40 feet in length."
+            },
+            {
+                question: "What made Dilophosaurus distinctive?",
+                options: ["Two crests on head", "Spikes on back", "Long neck", "Big claws"],
+                correct: 0,
+                explanation: "Dilophosaurus had two distinctive crests on its head."
+            },
+            {
+                question: "How many horns did Triceratops have?",
+                options: ["Two", "Three", "Four", "Five"],
+                correct: 1,
+                explanation: "Triceratops had three horns - two above the eyes and one on the nose."
+            },
+            {
+                question: "What was special about Stegosaurus plates?",
+                options: ["They were armor", "They regulated temperature", "They stored fat", "They were weapons"],
+                correct: 1,
+                explanation: "Stegosaurus plates helped regulate body temperature."
+            },
+            {
+                question: "How did most dinosaurs reproduce?",
+                options: ["Live birth", "Laid eggs", "Budding", "Splitting"],
+                correct: 1,
+                explanation: "Most dinosaurs laid eggs, like modern birds and reptiles."
+            },
+            {
+                question: "What was the smallest known dinosaur?",
+                options: ["Compsognathus", "Microraptor", "Fruitadens", "Anchiornis"],
+                correct: 0,
+                explanation: "Compsognathus was about the size of a chicken."
+            },
+            {
+                question: "How many fingers did T-Rex have?",
+                options: ["One", "Two", "Three", "Four"],
+                correct: 1,
+                explanation: "T-Rex had only two small fingers on each arm."
+            },
+            {
+                question: "What does 'dinosaur' mean?",
+                options: ["Terrible lizard", "Giant reptile", "Ancient beast", "Big animal"],
+                correct: 0,
+                explanation: "'Dinosaur' means 'terrible lizard' in Greek."
+            },
+            {
+                question: "How heavy was an adult Brachiosaurus?",
+                options: ["30 tons", "50 tons", "70 tons", "90 tons"],
+                correct: 2,
+                explanation: "Brachiosaurus weighed around 70 tons - as much as 12 elephants!"
+            }
+        ];
+
+        let currentScore = 0;
+        let highScore = localStorage.getItem('jurassicHighScore') || 0;
+        let failedSystems = 0;
+        let gameActive = false;
+        let selectedAnswer = -1;
+        let currentQuestion = null;
+        let dangerLevel = 0;
+
+        const dangerLevels = [
+            "MINIMAL", "LOW", "MODERATE", "ELEVATED", 
+            "HIGH", "SEVERE", "CRITICAL", "EXTREME", "MAXIMUM", "T-REX IMMINENT"
+        ];
+
+        const systemFailureMessages = [
+            "Main power fluctuations detected!",
+            "Security fence breach in Sector 7!",
+            "Communication array offline!",
+            "Backup generators failing!",
+            "Emergency protocols compromised!",
+            "Containment locks malfunctioning!",
+            "Security cameras down!",
+            "Motion sensors offline!",
+            "Control computers unresponsive!",
+            "Maintenance systems critical!"
+        ];
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('high-score').textContent = highScore;
+            gameActive = true;
+            showNextQuestion();
+        }
+
+        function resetGame() {
+            currentScore = 0;
+            failedSystems = 0;
+            dangerLevel = 0;
+            selectedAnswer = -1;
+            gameActive = false;
+            
+            // Reset all systems to online
+            for (let i = 1; i <= 10; i++) {
+                const system = document.getElementById(`system-${i}`);
+                system.className = 'system-item online';
+            }
+            document.getElementById('system-trex').className = 'system-item critical';
+            
+            document.getElementById('game-over-screen').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'block';
+            updateDisplay();
+        }
+
+        function showNextQuestion() {
+            if (!gameActive) return;
+            
+            currentQuestion = dinosaurQuestions[Math.floor(Math.random() * dinosaurQuestions.length)];
+            selectedAnswer = -1;
+            
+            document.getElementById('question-text').textContent = currentQuestion.question;
+            
+            const questionArea = document.getElementById('question-area');
+            questionArea.innerHTML = `
+                <div class="question-text">${currentQuestion.question}</div>
+                <div class="answer-options">
+                    ${currentQuestion.options.map((option, index) => 
+                        `<button class="answer-btn" onclick="selectAnswer(${index})" data-index="${index}">
+                            ${String.fromCharCode(65 + index)}: ${option}
+                        </button>`
+                    ).join('')}
+                </div>
+            `;
+        }
+
+        function selectAnswer(index) {
+            if (!gameActive) return;
+            
+            selectedAnswer = index;
+            const buttons = document.querySelectorAll('.answer-btn');
+            const isCorrect = index === currentQuestion.correct;
+            
+            // Show feedback
+            buttons[index].classList.add(isCorrect ? 'correct' : 'incorrect');
+            if (!isCorrect) {
+                buttons[currentQuestion.correct].classList.add('correct');
+            }
+            
+            // Disable buttons
+            buttons.forEach(btn => btn.onclick = null);
+            
+            if (isCorrect) {
+                currentScore++;
+                setTimeout(() => {
+                    showNextQuestion();
+                }, 1500);
+            } else {
+                // System failure!
+                failSystem();
+            }
+            
+            updateDisplay();
+        }
+
+        function failSystem() {
+            if (failedSystems >= 10) {
+                gameOver();
+                return;
+            }
+            
+            failedSystems++;
+            dangerLevel = Math.min(9, failedSystems);
+            
+            // Fail a system
+            const systemId = `system-${failedSystems}`;
+            const system = document.getElementById(systemId);
+            system.className = 'system-item failed';
+            system.textContent = system.textContent.replace('ONLINE', 'FAILED').replace('OPERATIONAL', 'FAILED').replace('ACTIVE', 'FAILED').replace('STANDBY', 'FAILED').replace('READY', 'FAILED').replace('SECURED', 'FAILED').replace('MONITORING', 'FAILED').replace('SCANNING', 'FAILED').replace('RESPONSIVE', 'FAILED').replace('AUTOMATED', 'FAILED');
+            
+            // Show warning
+            showWarning(systemFailureMessages[failedSystems - 1]);
+            
+            // Update T-Rex containment status
+            const trexSystem = document.getElementById('system-trex');
+            if (failedSystems >= 8) {
+                trexSystem.className = 'system-item failed';
+                trexSystem.textContent = '🦖 T-REX CONTAINMENT - BREACHED!';
+                setTimeout(() => gameOver(), 2000);
+            } else if (failedSystems >= 5) {
+                trexSystem.textContent = '🦖 T-REX CONTAINMENT - FAILING!';
+            }
+        }
+
+        function showWarning(message) {
+            document.getElementById('warning-message').textContent = message;
+            document.getElementById('warning-overlay').style.display = 'flex';
+            
+            setTimeout(() => {
+                document.getElementById('warning-overlay').style.display = 'none';
+                if (gameActive && failedSystems < 10) {
+                    showNextQuestion();
+                }
+            }, 3000);
+        }
+
+        function gameOver() {
+            gameActive = false;
+            
+            if (currentScore > highScore) {
+                highScore = currentScore;
+                localStorage.setItem('jurassicHighScore', highScore);
+                document.getElementById('final-message').textContent = "NEW HIGH SCORE! But the T-Rex still got you...";
+            } else {
+                document.getElementById('final-message').textContent = "The park's systems have completely failed. Evacuate immediately!";
+            }
+            
+            document.getElementById('final-score').textContent = currentScore;
+            document.getElementById('game-over-screen').style.display = 'flex';
+        }
+
+        function updateDisplay() {
+            document.getElementById('current-score').textContent = currentScore;
+            document.getElementById('high-score').textContent = highScore;
+            document.getElementById('danger-level').textContent = dangerLevels[dangerLevel];
+            document.getElementById('failed-systems').textContent = `${failedSystems}/10`;
+            
+            const dangerElement = document.getElementById('danger-level');
+            if (dangerLevel <= 2) {
+                dangerElement.className = 'score-current';
+            } else if (dangerLevel <= 6) {
+                dangerElement.className = 'score-high';
+            } else {
+                dangerElement.className = 'score-danger';
+            }
+        }
+
+        // Keyboard support for TV remotes
+        document.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
+            
+            const buttons = document.querySelectorAll('.answer-btn');
+            if (buttons.length === 0) return;
+            
+            switch(e.key) {
+                case '1':
+                case 'a':
+                case 'A':
+                    selectAnswer(0);
+                    break;
+                case '2':
+                case 'b':
+                case 'B':
+                    selectAnswer(1);
+                    break;
+                case '3':
+                case 'c':
+                case 'C':
+                    selectAnswer(2);
+                    break;
+                case '4':
+                case 'd':
+                case 'D':
+                    selectAnswer(3);
+                    break;
+            }
+        });
+
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>

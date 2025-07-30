@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InGen Workstation - Jurassic Park System Control</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #5A6B7C;
+            font-family: 'IBM Plex Mono', monospace;
+            height: 100vh;
+            overflow: hidden;
+            color: #000000;
+        }
+        
+        /* SGI IRIX Desktop Background */
+        .sgi-desktop {
+            width: 100%;
+            height: 100vh;
+            background: 
+                linear-gradient(45deg, #6B7C8D 0%, #5A6B7C 25%, #4A5B6C 50%, #5A6B7C 75%, #6B7C8D 100%),
+                radial-gradient(circle at 25% 25%, rgba(139, 149, 160, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(139, 149, 160, 0.2) 0%, transparent 50%);
+            position: relative;
+        }
+        
+        /* SGI Window Style */
+        .sgi-window {
+            position: absolute;
+            background: #A0B0C0;
+            border: 2px outset #B0C0D0;
+            box-shadow: 
+                inset 1px 1px 2px rgba(255, 255, 255, 0.6),
+                inset -1px -1px 2px rgba(0, 0, 0, 0.4),
+                3px 3px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .window-titlebar {
+            background: linear-gradient(180deg, #C0D0E0 0%, #A0B0C0 100%);
+            border-bottom: 1px solid #808090;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #000000;
+            text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.6);
+        }
+        
+        .window-content {
+            background: #D0D0D0;
+            color: #000000;
+        }
+        
+        /* Main System Monitor Window */
+        .system-monitor {
+            top: 20px;
+            left: 20px;
+            width: 500px;
+            height: 680px;
+        }
+        
+        .system-list {
+            height: 640px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #E0E0E0;
+            border: 1px inset #D0D0D0;
+        }
+        
+        .system-entry {
+            background: #F0F0F0;
+            border: 1px outset #F0F0F0;
+            margin: 3px 0;
+            padding: 8px;
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .system-online {
+            background: #90EE90;
+            color: #006400;
+            border-color: #98F698;
+        }
+        
+        .system-warning {
+            background: #FFFF99;
+            color: #CC6600;
+            border-color: #FFFF77;
+            animation: sgi-blink 1s infinite;
+        }
+        
+        .system-critical {
+            background: #FFB6C1;
+            color: #8B0000;
+            border-color: #FF9999;
+            animation: sgi-pulse 0.5s infinite;
+        }
+        
+        .system-failed {
+            background: #A0A0A0;
+            color: #404040;
+            border: 1px inset #909090;
+        }
+        
+        @keyframes sgi-blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.7; }
+        }
+        
+        @keyframes sgi-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        /* Game Control Window */
+        .game-control {
+            top: 20px;
+            right: 20px;
+            width: 400px;
+            height: 680px;
+        }
+        
+        .control-panel {
+            height: 640px;
+            background: #E0E0E0;
+            border: 1px inset #D0D0D0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .status-display {
+            background: #F0F0F0;
+            border: 1px inset #E0E0E0;
+            padding: 15px;
+            margin: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-line {
+            margin: 6px 0;
+            padding: 3px;
+        }
+        
+        .status-ok { color: #006400; }
+        .status-warning { color: #CC6600; }
+        .status-critical { color: #8B0000; }
+        
+        /* Question Area */
+        .question-panel {
+            flex: 1;
+            margin: 10px;
+            background: #F0F0F0;
+            border: 2px inset #E0E0E0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .question-text {
+            background: #FFFFFF;
+            border: 1px inset #E0E0E0;
+            padding: 15px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #000000;
+            margin-bottom: 15px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .answer-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: auto;
+        }
+        
+        /* SGI Button Style */
+        .sgi-button {
+            background: linear-gradient(180deg, #E0E0E0 0%, #C0C0C0 100%);
+            border: 2px outset #D0D0D0;
+            color: #000000;
+            padding: 12px 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        
+        .sgi-button:hover {
+            background: linear-gradient(180deg, #F0F0F0 0%, #D0D0D0 100%);
+        }
+        
+        .sgi-button:active {
+            border: 2px inset #D0D0D0;
+            background: linear-gradient(180deg, #C0C0C0 0%, #E0E0E0 100%);
+        }
+        
+        .sgi-button.correct {
+            background: linear-gradient(180deg, #98FB98 0%, #90EE90 100%);
+            border-color: #90EE90;
+            color: #006400;
+        }
+        
+        .sgi-button.incorrect {
+            background: linear-gradient(180deg, #FFB6C1 0%, #FFA0B4 100%);
+            border-color: #FF9999;
+            color: #8B0000;
+        }
+        
+        .sgi-button.disabled {
+            background: #A0A0A0;
+            border: 2px inset #909090;
+            color: #606060;
+            cursor: not-allowed;
+        }
+        
+        /* Start Dialog */
+        .start-dialog {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 450px;
+            background: #A0B0C0;
+            border: 2px outset #B0C0D0;
+            box-shadow: 
+                inset 1px 1px 2px rgba(255, 255, 255, 0.6),
+                inset -1px -1px 2px rgba(0, 0, 0, 0.4),
+                5px 5px 15px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+        }
+        
+        .dialog-content {
+            background: #E0E0E0;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .dialog-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 15px;
+        }
+        
+        .dialog-text {
+            font-size: 12px;
+            color: #333333;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+        
+        .start-button {
+            background: linear-gradient(180deg, #FFD700 0%, #FFA500 100%);
+            border: 2px outset #FFD700;
+            color: #000000;
+            padding: 10px 20px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .start-button:hover {
+            background: linear-gradient(180deg, #FFFF00 0%, #FFD700 100%);
+        }
+        
+        .start-button:active {
+            border: 2px inset #FFD700;
+        }
+        
+        /* Warning Dialog */
+        .warning-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .warning-content {
+            background: #A0B0C0;
+            border: 3px outset #B0C0D0;
+            width: 400px;
+            box-shadow: 
+                inset 2px 2px 4px rgba(255, 255, 255, 0.6),
+                inset -2px -2px 4px rgba(0, 0, 0, 0.4),
+                8px 8px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .warning-titlebar {
+            background: linear-gradient(180deg, #FFB6C1 0%, #FF9999 100%);
+            border-bottom: 1px solid #FF6666;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #8B0000;
+        }
+        
+        .warning-body {
+            background: #FFE4E1;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .warning-text {
+            font-size: 14px;
+            color: #8B0000;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        /* Game Over Dialog */
+        .gameover-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+        
+        .gameover-content {
+            background: #A0B0C0;
+            border: 3px outset #B0C0D0;
+            width: 500px;
+            box-shadow: 
+                inset 2px 2px 4px rgba(255, 255, 255, 0.6),
+                inset -2px -2px 4px rgba(0, 0, 0, 0.4),
+                10px 10px 25px rgba(0, 0, 0, 0.6);
+        }
+        
+        .gameover-titlebar {
+            background: linear-gradient(180deg, #FF6B6B 0%, #FF4444 100%);
+            border-bottom: 1px solid #FF0000;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #FFFFFF;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+        }
+        
+        .gameover-body {
+            background: #FFE4E1;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .gameover-title {
+            font-size: 18px;
+            color: #8B0000;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .trex-ascii {
+            font-family: monospace;
+            font-size: 8px;
+            color: #8B0000;
+            margin: 15px 0;
+            line-height: 1;
+        }
+        
+        .score-text {
+            font-size: 14px;
+            color: #000000;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="sgi-desktop">
+        <!-- System Monitor Window -->
+        <div class="sgi-window system-monitor">
+            <div class="window-titlebar">InGen System Monitor v2.1 - Isla Nublar</div>
+            <div class="window-content">
+                <div class="system-list" id="system-list">
+                    <div class="system-entry system-online" id="sys-1">PWR_GRID: Main power distribution - ONLINE</div>
+                    <div class="system-entry system-online" id="sys-2">SEC_FENCE: Perimeter security barriers - ACTIVE</div>
+                    <div class="system-entry system-online" id="sys-3">COMM_NET: Communication network - OPERATIONAL</div>
+                    <div class="system-entry system-online" id="sys-4">BACKUP_PWR: Emergency generators - STANDBY</div>
+                    <div class="system-entry system-online" id="sys-5">EMRG_PROT: Emergency protocols - READY</div>
+                    <div class="system-entry system-online" id="sys-6">CONT_LOCK: Containment locks - SECURED</div>
+                    <div class="system-entry system-online" id="sys-7">SEC_CAM: Security surveillance - MONITORING</div>
+                    <div class="system-entry system-online" id="sys-8">MOT_SENS: Motion detection grid - SCANNING</div>
+                    <div class="system-entry system-online" id="sys-9">CTRL_SYS: Control computers - RESPONSIVE</div>
+                    <div class="system-entry system-online" id="sys-10">MAINT_SYS: Automated maintenance - ACTIVE</div>
+                    <div class="system-entry system-critical" id="sys-trex">TREX_CONT: T-Rex containment - CRITICAL MONITORING</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Control Window -->
+        <div class="sgi-window game-control">
+            <div class="window-titlebar">Dinosaur Knowledge Assessment Terminal</div>
+            <div class="window-content">
+                <div class="control-panel">
+                    <div class="status-display">
+                        <div class="status-line">CURRENT SCORE: <span id="current-score" class="status-ok">0</span></div>
+                        <div class="status-line">HIGH SCORE: <span id="high-score" class="status-ok">0</span></div>
+                        <div class="status-line">DANGER LEVEL: <span id="danger-level" class="status-ok">MINIMAL</span></div>
+                        <div class="status-line">SYSTEMS FAILED: <span id="failed-count" class="status-ok">0/10</span></div>
+                    </div>
+                    
+                    <div class="question-panel">
+                        <div class="question-text" id="question-display">
+                            System ready. Initialize assessment protocol to begin dinosaur knowledge verification.
+                        </div>
+                        <div class="answer-buttons" id="answer-buttons">
+                            <!-- Buttons will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Start Dialog -->
+        <div id="start-dialog" class="start-dialog">
+            <div class="window-titlebar">InGen Security Protocol</div>
+            <div class="dialog-content">
+                <div class="dialog-title">🦖 JURASSIC PARK SYSTEM MAINTENANCE 🦖</div>
+                <div class="dialog-text">
+                    Emergency protocol activated. Park systems require continuous monitoring.<br><br>
+                    Answer dinosaur knowledge questions to maintain system stability.<br>
+                    Wrong answers cause critical system failures.<br><br>
+                    <strong>How long can you keep the T-Rex contained?</strong>
+                </div>
+                <button class="start-button" onclick="initializeGame()">INITIALIZE PROTOCOL</button>
+            </div>
+        </div>
+        
+        <!-- Warning Dialog -->
+        <div id="warning-dialog" class="warning-dialog">
+            <div class="warning-content">
+                <div class="warning-titlebar">⚠️ SYSTEM ALERT ⚠️</div>
+                <div class="warning-body">
+                    <div class="warning-text" id="warning-text"></div>
+                    <button class="sgi-button" onclick="closeWarning()" style="margin-top: 15px;">ACKNOWLEDGE</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Over Dialog -->
+        <div id="gameover-dialog" class="gameover-dialog">
+            <div class="gameover-content">
+                <div class="gameover-titlebar">🦖 CONTAINMENT BREACH - T-REX RELEASED 🦖</div>
+                <div class="gameover-body">
+                    <div class="gameover-title">PARK SYSTEMS FAILED</div>
+                    <div class="trex-ascii">
+        ████████████████
+       ██              ██
+      ██    ████████    ██
+     ██    ██      ██    ██
+    ██████████████████████
+   ██                    ██
+  ██      ████████████    ██
+ ██     ██            ██  ██
+██     ██              ██  ██
+██     ██                ██ ██
+███████████              █████
+      ██████████████████████
+                    </div>
+                    <div class="score-text">Final Score: <span id="final-score">0</span></div>
+                    <div class="score-text" id="final-message"></div>
+                    <button class="start-button" onclick="restartGame()" style="margin-top: 15px;">RESTART PROTOCOL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameActive = false;
+        let currentScore = 0;
+        let highScore = parseInt(localStorage.getItem('sgiJurassicScore')) || 0;
+        let failedSystems = 0;
+        let dangerLevel = 0;
+
+        // Dinosaur questions
+        const questions = [
+            {
+                question: "How many teeth did a Tyrannosaurus Rex have?",
+                answers: ["About 30", "About 50", "About 60", "About 80"],
+                correct: 2
+            },
+            {
+                question: "What does 'Velociraptor' mean in Latin?",
+                answers: ["Fast hunter", "Swift seizer", "Quick killer", "Speed demon"],
+                correct: 1
+            },
+            {
+                question: "How tall could a Brachiosaurus reach?",
+                answers: ["20 feet", "30 feet", "40 feet", "50 feet"],
+                correct: 2
+            },
+            {
+                question: "What did Triceratops primarily eat?",
+                answers: ["Fish", "Other dinosaurs", "Plants", "Insects"],
+                correct: 2
+            },
+            {
+                question: "How fast could a Velociraptor run?",
+                answers: ["15 mph", "25 mph", "35 mph", "45 mph"],
+                correct: 1
+            },
+            {
+                question: "How long was a full-grown T-Rex?",
+                answers: ["20 feet", "30 feet", "40 feet", "50 feet"],
+                correct: 2
+            },
+            {
+                question: "What made Dilophosaurus distinctive?",
+                answers: ["Two head crests", "Spikes on back", "Long neck", "Big claws"],
+                correct: 0
+            },
+            {
+                question: "How many horns did Triceratops have?",
+                answers: ["Two", "Three", "Four", "Five"],
+                correct: 1
+            },
+            {
+                question: "What was special about Stegosaurus plates?",
+                answers: ["They were armor", "Temperature control", "Fat storage", "Weapons"],
+                correct: 1
+            },
+            {
+                question: "How did most dinosaurs reproduce?",
+                answers: ["Live birth", "Laid eggs", "Budding", "Splitting"],
+                correct: 1
+            },
+            {
+                question: "How many fingers did T-Rex have on each arm?",
+                answers: ["One", "Two", "Three", "Four"],
+                correct: 1
+            },
+            {
+                question: "What does 'dinosaur' mean in Greek?",
+                answers: ["Terrible lizard", "Giant reptile", "Ancient beast", "Big animal"],
+                correct: 0
+            },
+            {
+                question: "How heavy was an adult Brachiosaurus?",
+                answers: ["30 tons", "50 tons", "70 tons", "90 tons"],
+                correct: 2
+            },
+            {
+                question: "What was the smallest known dinosaur?",
+                answers: ["Compsognathus", "Microraptor", "Fruitadens", "Anchiornis"],
+                correct: 0
+            },
+            {
+                question: "In which geological periods did dinosaurs exist?",
+                answers: ["Jurassic only", "Cretaceous only", "Triassic only", "All three periods"],
+                correct: 3
+            }
+        ];
+
+        const dangerLevels = [
+            "MINIMAL", "LOW", "MODERATE", "ELEVATED", 
+            "HIGH", "SEVERE", "CRITICAL", "EXTREME", "MAXIMUM", "T-REX IMMINENT"
+        ];
+
+        const systemFailures = [
+            "Main power grid experiencing fluctuations!",
+            "Security fence breach detected in Sector 7!",
+            "Communication network offline!",
+            "Backup generators failing!",
+            "Emergency protocols compromised!",
+            "Containment locks malfunctioning!",
+            "Security cameras down!",
+            "Motion sensors offline!",
+            "Control computers unresponsive!",
+            "Maintenance systems critical!"
+        ];
+
+        function initializeGame() {
+            document.getElementById('start-dialog').style.display = 'none';
+            document.getElementById('high-score').textContent = highScore;
+            gameActive = true;
+            showNextQuestion();
+        }
+
+        function showNextQuestion() {
+            if (!gameActive) return;
+            
+            const question = questions[Math.floor(Math.random() * questions.length)];
+            document.getElementById('question-display').textContent = question.question;
+            
+            const buttonsContainer = document.getElementById('answer-buttons');
+            buttonsContainer.innerHTML = '';
+            
+            question.answers.forEach((answer, index) => {
+                const button = document.createElement('button');
+                button.className = 'sgi-button';
+                button.textContent = `${String.fromCharCode(65 + index)}: ${answer}`;
+                button.onclick = function() { selectAnswer(index, question.correct); };
+                buttonsContainer.appendChild(button);
+            });
+        }
+
+        function selectAnswer(selected, correct) {
+            if (!gameActive) return;
+            
+            const buttons = document.querySelectorAll('.answer-buttons .sgi-button');
+            const isCorrect = selected === correct;
+            
+            // Disable all buttons
+            buttons.forEach((btn, idx) => {
+                btn.onclick = null;
+                btn.classList.add('disabled');
+                if (idx === selected) {
+                    btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+                }
+                if (idx === correct && !isCorrect) {
+                    btn.classList.add('correct');
+                }
+            });
+            
+            if (isCorrect) {
+                currentScore++;
+                updateDisplay();
+                setTimeout(() => {
+                    showNextQuestion();
+                }, 1500);
+            } else {
+                failSystem();
+            }
+        }
+
+        function failSystem() {
+            failedSystems++;
+            dangerLevel = Math.min(9, failedSystems);
+            
+            if (failedSystems <= 10) {
+                // Fail the system
+                const systemElement = document.getElementById(`sys-${failedSystems}`);
+                systemElement.className = 'system-entry system-failed';
+                systemElement.textContent = systemElement.textContent.replace(/ONLINE|ACTIVE|OPERATIONAL|STANDBY|READY|SECURED|MONITORING|SCANNING|RESPONSIVE/, 'FAILED');
+                
+                // Show warning
+                showWarning(systemFailures[failedSystems - 1]);
+                
+                // Update T-Rex status
+                const trexElement = document.getElementById('sys-trex');
+                if (failedSystems >= 8) {
+                    trexElement.className = 'system-entry system-failed';
+                    trexElement.textContent = 'TREX_CONT: T-Rex containment - BREACH IMMINENT';
+                } else if (failedSystems >= 5) {
+                    trexElement.textContent = 'TREX_CONT: T-Rex containment - FAILING';
+                }
+                
+                updateDisplay();
+                
+                if (failedSystems >= 10) {
+                    setTimeout(() => {
+                        gameOver();
+                    }, 2000);
+                }
+            }
+        }
+
+        function showWarning(message) {
+            document.getElementById('warning-text').textContent = message;
+            document.getElementById('warning-dialog').style.display = 'flex';
+        }
+
+        function closeWarning() {
+            document.getElementById('warning-dialog').style.display = 'none';
+            if (gameActive && failedSystems < 10) {
+                setTimeout(() => {
+                    showNextQuestion();
+                }, 500);
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('current-score').textContent = currentScore;
+            document.getElementById('high-score').textContent = highScore;
+            document.getElementById('danger-level').textContent = dangerLevels[dangerLevel];
+            document.getElementById('failed-count').textContent = `${failedSystems}/10`;
+            
+            // Update danger level color
+            const dangerElement = document.getElementById('danger-level');
+            if (dangerLevel <= 2) {
+                dangerElement.className = 'status-ok';
+            } else if (dangerLevel <= 6) {
+                dangerElement.className = 'status-warning';
+            } else {
+                dangerElement.className = 'status-critical';
+            }
+            
+            // Update failed count color
+            const failedElement = document.getElementById('failed-count');
+            if (failedSystems <= 2) {
+                failedElement.className = 'status-ok';
+            } else if (failedSystems <= 6) {
+                failedElement.className = 'status-warning';
+            } else {
+                failedElement.className = 'status-critical';
+            }
+        }
+
+        function gameOver() {
+            gameActive = false;
+            
+            // Update high score
+            if (currentScore > highScore) {
+                highScore = currentScore;
+                localStorage.setItem('sgiJurassicScore', highScore.toString());
+                document.getElementById('final-message').textContent = "NEW HIGH SCORE! But the T-Rex still escaped...";
+            } else {
+                document.getElementById('final-message').textContent = "All systems failed. Evacuate immediately!";
+            }
+            
+            document.getElementById('final-score').textContent = currentScore;
+            document.getElementById('gameover-dialog').style.display = 'flex';
+        }
+
+        function restartGame() {
+            // Reset game state
+            gameActive = false;
+            currentScore = 0;
+            failedSystems = 0;
+            dangerLevel = 0;
+            
+            // Reset all systems to online
+            for (let i = 1; i <= 10; i++) {
+                const system = document.getElementById(`sys-${i}`);
+                system.className = 'system-entry system-online';
+            }
+            
+            // Reset system texts
+            document.getElementById('sys-1').textContent = 'PWR_GRID: Main power distribution - ONLINE';
+            document.getElementById('sys-2').textContent = 'SEC_FENCE: Perimeter security barriers - ACTIVE';
+            document.getElementById('sys-3').textContent = 'COMM_NET: Communication network - OPERATIONAL';
+            document.getElementById('sys-4').textContent = 'BACKUP_PWR: Emergency generators - STANDBY';
+            document.getElementById('sys-5').textContent = 'EMRG_PROT: Emergency protocols - READY';
+            document.getElementById('sys-6').textContent = 'CONT_LOCK: Containment locks - SECURED';
+            document.getElementById('sys-7').textContent = 'SEC_CAM: Security surveillance - MONITORING';
+            document.getElementById('sys-8').textContent = 'MOT_SENS: Motion detection grid - SCANNING';
+            document.getElementById('sys-9').textContent = 'CTRL_SYS: Control computers - RESPONSIVE';
+            document.getElementById('sys-10').textContent = 'MAINT_SYS: Automated maintenance - ACTIVE';
+            document.getElementById('sys-trex').textContent = 'TREX_CONT: T-Rex containment - CRITICAL MONITORING';
+            document.getElementById('sys-trex').className = 'system-entry system-critical';
+            
+            // Hide game over dialog
+            document.getElementById('gameover-dialog').style.display = 'none';
+            
+            // Show start dialog
+            document.getElementById('start-dialog').style.display = 'block';
+            
+            updateDisplay();
+        }
+
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>

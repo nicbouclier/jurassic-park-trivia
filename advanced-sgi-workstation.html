@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InGen Workstation - Isla Nublar Operations Center</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #003366 0%, #004488 50%, #002244 100%);
+            font-family: 'IBM Plex Mono', monospace;
+            height: 100vh;
+            overflow: hidden;
+            color: #FFFFFF;
+            font-size: 11px;
+        }
+        
+        /* Authentic SGI Desktop */
+        .sgi-desktop {
+            width: 100%;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            grid-template-rows: 40px 1fr 60px;
+            gap: 3px;
+            padding: 3px;
+            background: 
+                linear-gradient(45deg, #004488 0%, #003366 25%, #002244 50%, #003366 75%, #004488 100%);
+        }
+        
+        /* System Menu Bar */
+        .menu-bar {
+            grid-column: 1 / -1;
+            background: linear-gradient(180deg, #6688AA 0%, #4466AA 100%);
+            border: 2px outset #6688AA;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #000000;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.4);
+        }
+        
+        .system-time {
+            margin-left: auto;
+            color: #000000;
+            font-family: monospace;
+        }
+        
+        /* Left Panel - System Status */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        
+        .system-monitor {
+            background: #5577AA;
+            border: 2px outset #6688BB;
+            box-shadow: inset 1px 1px 2px rgba(255,255,255,0.3), inset -1px -1px 2px rgba(0,0,0,0.3);
+            flex: 1;
+        }
+        
+        .window-title {
+            background: linear-gradient(180deg, #77AADD 0%, #5588CC 100%);
+            border-bottom: 1px solid #3366AA;
+            padding: 6px 10px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #000000;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.4);
+        }
+        
+        .system-list {
+            background: #E8F0FF;
+            color: #000000;
+            height: calc(100% - 25px);
+            overflow-y: auto;
+            padding: 5px;
+        }
+        
+        .sys-item {
+            background: #F8F8FF;
+            border: 1px outset #E0E8F0;
+            margin: 2px 0;
+            padding: 4px 6px;
+            font-size: 9px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .sys-online {
+            background: #C8FFC8;
+            color: #006600;
+            border-color: #A0FFA0;
+        }
+        
+        .sys-warning {
+            background: #FFFFAA;
+            color: #CC6600;
+            border-color: #FFFF77;
+            animation: warning-flash 2s infinite;
+        }
+        
+        .sys-critical {
+            background: #FFCCCC;
+            color: #CC0000;
+            border-color: #FF9999;
+            animation: critical-pulse 1s infinite;
+        }
+        
+        .sys-failed {
+            background: #CCCCCC;
+            color: #666666;
+            border: 1px inset #AAAAAA;
+        }
+        
+        @keyframes warning-flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @keyframes critical-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        /* Central Display Area */
+        .central-display {
+            background: #003366;
+            border: 3px outset #4466AA;
+            box-shadow: inset 2px 2px 4px rgba(255,255,255,0.2), inset -2px -2px 4px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .display-header {
+            background: linear-gradient(180deg, #77AADD 0%, #5588CC 100%);
+            border-bottom: 2px solid #3366AA;
+            padding: 8px 15px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #000000;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .park-visualization {
+            flex: 1;
+            background: 
+                radial-gradient(ellipse at center, #001144 0%, #000822 70%),
+                linear-gradient(45deg, #002244 0%, #001133 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Isla Nublar Island Map */
+        .island-map {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            height: 85%;
+            background: 
+                radial-gradient(ellipse at 40% 30%, #003300 0%, #002200 40%, #001100 100%);
+            border: 2px solid #00FFFF;
+            clip-path: polygon(
+                10% 25%, 15% 15%, 25% 8%, 40% 5%, 60% 8%, 75% 15%, 85% 25%,
+                92% 40%, 95% 55%, 90% 70%, 80% 82%, 65% 90%, 45% 92%, 25% 88%,
+                12% 80%, 5% 65%, 3% 50%, 8% 35%
+            );
+            box-shadow: 
+                inset 0 0 30px rgba(0, 255, 255, 0.2),
+                0 0 20px rgba(0, 255, 255, 0.3);
+            animation: island-scan 4s ease-in-out infinite;
+        }
+        
+        @keyframes island-scan {
+            0%, 100% { box-shadow: inset 0 0 30px rgba(0, 255, 255, 0.2), 0 0 20px rgba(0, 255, 255, 0.3); }
+            50% { box-shadow: inset 0 0 50px rgba(0, 255, 255, 0.4), 0 0 30px rgba(0, 255, 255, 0.5); }
+        }
+        
+        /* Topographical Grid Overlay */
+        .topo-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0,255,255,0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,255,0.15) 1px, transparent 1px);
+            background-size: 25px 25px;
+            animation: grid-pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes grid-pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+        
+        /* Park Roads */
+        .park-road {
+            position: absolute;
+            background: #444444;
+            border: 1px solid #666666;
+            box-shadow: 0 0 3px rgba(0,255,255,0.3);
+        }
+        
+        .main-road {
+            top: 45%;
+            left: 15%;
+            width: 70%;
+            height: 3px;
+            transform: rotate(-5deg);
+        }
+        
+        .north-road {
+            top: 25%;
+            left: 40%;
+            width: 3px;
+            height: 25%;
+            transform: rotate(15deg);
+        }
+        
+        .south-road {
+            top: 55%;
+            left: 25%;
+            width: 3px;
+            height: 30%;
+            transform: rotate(-20deg);
+        }
+        
+        /* Park Sectors on Map */
+        .park-sector {
+            position: absolute;
+            border: 2px solid;
+            background: rgba(0,0,0,0.7);
+            text-align: center;
+            font-size: 9px;
+            font-weight: 600;
+            padding: 4px 2px;
+            line-height: 1.1;
+            animation: sector-glow 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes sector-glow {
+            0% { box-shadow: inset 0 0 8px rgba(255,255,255,0.1); }
+            100% { box-shadow: inset 0 0 15px rgba(255,255,255,0.3); }
+        }
+        
+        .visitor-center {
+            top: 42%;
+            left: 44%;
+            width: 80px;
+            height: 40px;
+            border-color: #FFFF00;
+            color: #FFFF00;
+            text-shadow: 0 0 6px #FFFF00;
+        }
+        
+        .raptor-pen {
+            top: 20%;
+            left: 35%;
+            width: 60px;
+            height: 35px;
+            border-color: #FF0000;
+            color: #FF0000;
+            text-shadow: 0 0 6px #FF0000;
+        }
+        
+        .trex-paddock {
+            top: 60%;
+            left: 15%;
+            width: 85px;
+            height: 45px;
+            border-color: #FF8800;
+            color: #FF8800;
+            text-shadow: 0 0 6px #FF8800;
+        }
+        
+        .herbivore-valley {
+            top: 25%;
+            left: 65%;
+            width: 75px;
+            height: 55px;
+            border-color: #00FF88;
+            color: #00FF88;
+            text-shadow: 0 0 6px #00FF88;
+        }
+        
+        .dilophosaurus-forest {
+            top: 65%;
+            left: 65%;
+            width: 70px;
+            height: 40px;
+            border-color: #8844FF;
+            color: #8844FF;
+            text-shadow: 0 0 6px #8844FF;
+        }
+        
+        .maintenance-compound {
+            top: 75%;
+            left: 40%;
+            width: 65px;
+            height: 30px;
+            border-color: #CCCCCC;
+            color: #CCCCCC;
+            text-shadow: 0 0 6px #CCCCCC;
+        }
+        
+        /* Security Gates */
+        .security-gate {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #00FF00;
+            border: 1px solid #00FF00;
+            box-shadow: 0 0 8px #00FF00;
+            animation: gate-pulse 2s ease-in-out infinite;
+            cursor: pointer;
+        }
+        
+        .security-gate::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border: 1px solid #00FF00;
+            opacity: 0.5;
+        }
+        
+        .security-gate.breached {
+            background: #FF0000;
+            border-color: #FF0000;
+            box-shadow: 0 0 12px #FF0000;
+            animation: gate-alarm 0.5s ease-in-out infinite;
+        }
+        
+        .security-gate.breached::before {
+            border-color: #FF0000;
+        }
+        
+        @keyframes gate-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+        
+        @keyframes gate-alarm {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1.5) rotate(180deg); opacity: 0.6; }
+        }
+        
+        /* Gate positions around the island */
+        .gate-1 { top: 18%; left: 40%; } /* Raptor Pen North */
+        .gate-2 { top: 25%; left: 32%; } /* Raptor Pen South */
+        .gate-3 { top: 58%; left: 12%; } /* T-Rex Paddock West */
+        .gate-4 { top: 68%; left: 20%; } /* T-Rex Paddock South */
+        .gate-5 { top: 22%; left: 70%; } /* Herbivore Valley North */
+        .gate-6 { top: 35%; left: 72%; } /* Herbivore Valley East */
+        .gate-7 { top: 63%; left: 68%; } /* Dilophosaurus Forest */
+        .gate-8 { top: 77%; left: 42%; } /* Maintenance Compound */
+        .gate-9 { top: 40%; left: 42%; } /* Visitor Center Main */
+        .gate-10 { top: 48%; left: 52%; } /* Visitor Center South */
+        
+        /* Coastline Details */
+        .coastline-marker {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #00CCFF;
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: coast-blink 3s ease-in-out infinite;
+        }
+        
+        @keyframes coast-blink {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+        
+        .coast-1 { top: 12%; left: 35%; }
+        .coast-2 { top: 8%; left: 55%; }
+        .coast-3 { top: 15%; left: 78%; }
+        .coast-4 { top: 35%; left: 88%; }
+        .coast-5 { top: 65%; left: 85%; }
+        .coast-6 { top: 85%; left: 60%; }
+        .coast-7 { top: 88%; left: 35%; }
+        .coast-8 { top: 78%; left: 15%; }
+        .coast-9 { top: 55%; left: 8%; }
+        .coast-10 { top: 25%; left: 12%; }
+        
+        /* Question Panel */
+        .question-area {
+            background: #E8F0FF;
+            border: 2px inset #D0D8E8;
+            margin: 10px;
+            padding: 15px;
+            color: #000000;
+            min-height: 120px;
+        }
+        
+        .question-text {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            text-align: center;
+            padding: 10px;
+            background: #FFFFFF;
+            border: 1px inset #E0E8F0;
+        }
+        
+        .answer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .answer-btn {
+            background: linear-gradient(180deg, #D0D8E8 0%, #B0B8C8 100%);
+            border: 2px outset #C0C8D8;
+            color: #000000;
+            padding: 10px 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        
+        .answer-btn:hover {
+            background: linear-gradient(180deg, #E0E8F8 0%, #C0C8D8 100%);
+        }
+        
+        .answer-btn:active {
+            border: 2px inset #C0C8D8;
+        }
+        
+        .answer-btn.correct {
+            background: linear-gradient(180deg, #C8FFC8 0%, #A0FFA0 100%);
+            border-color: #80FF80;
+            color: #006600;
+        }
+        
+        .answer-btn.incorrect {
+            background: linear-gradient(180deg, #FFCCCC 0%, #FFAAAA 100%);
+            border-color: #FF8888;
+            color: #CC0000;
+        }
+        
+        .answer-btn.disabled {
+            background: #CCCCCC;
+            border: 2px inset #AAAAAA;
+            color: #666666;
+            cursor: not-allowed;
+        }
+        
+        /* Right Panel - Data Streams */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        
+        .data-stream {
+            background: #5577AA;
+            border: 2px outset #6688BB;
+            box-shadow: inset 1px 1px 2px rgba(255,255,255,0.3), inset -1px -1px 2px rgba(0,0,0,0.3);
+            flex: 1;
+        }
+        
+        .data-content {
+            background: #E8F0FF;
+            color: #000000;
+            height: calc(100% - 25px);
+            overflow-y: auto;
+            padding: 8px;
+            font-size: 10px;
+            line-height: 1.3;
+        }
+        
+        .data-line {
+            margin: 3px 0;
+            padding: 2px 4px;
+            font-family: monospace;
+        }
+        
+        .data-ok { color: #006600; }
+        .data-warning { color: #CC6600; }
+        .data-critical { color: #CC0000; }
+        
+        /* Status Bar */
+        .status-bar {
+            grid-column: 1 / -1;
+            background: linear-gradient(180deg, #6688AA 0%, #4466AA 100%);
+            border: 2px outset #6688AA;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            padding: 8px 15px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #000000;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.4);
+        }
+        
+        .status-item {
+            text-align: center;
+        }
+        
+        .score-current { color: #006600; }
+        .score-warning { color: #CC6600; }
+        .score-critical { color: #CC0000; }
+        
+        /* Modal Dialogs */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-dialog {
+            background: #5577AA;
+            border: 3px outset #6688BB;
+            box-shadow: 
+                inset 2px 2px 4px rgba(255,255,255,0.3),
+                inset -2px -2px 4px rgba(0,0,0,0.3),
+                8px 8px 20px rgba(0,0,0,0.6);
+            width: 500px;
+            max-width: 90vw;
+        }
+        
+        .modal-title {
+            background: linear-gradient(180deg, #77AADD 0%, #5588CC 100%);
+            border-bottom: 2px solid #3366AA;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #000000;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.4);
+        }
+        
+        .modal-content {
+            background: #E8F0FF;
+            color: #000000;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .modal-text {
+            font-size: 12px;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        
+        .modal-btn {
+            background: linear-gradient(180deg, #FFD700 0%, #FFA500 100%);
+            border: 2px outset #FFD700;
+            color: #000000;
+            padding: 10px 20px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .modal-btn:hover {
+            background: linear-gradient(180deg, #FFFF00 0%, #FFD700 100%);
+        }
+        
+        .modal-btn:active {
+            border: 2px inset #FFD700;
+        }
+        
+        .warning-dialog .modal-title {
+            background: linear-gradient(180deg, #FFAAAA 0%, #FF8888 100%);
+            color: #CC0000;
+        }
+        
+        .gameover-dialog .modal-title {
+            background: linear-gradient(180deg, #FF6666 0%, #FF4444 100%);
+            color: #FFFFFF;
+        }
+        
+        .trex-ascii {
+            font-family: monospace;
+            font-size: 8px;
+            color: #CC0000;
+            margin: 15px 0;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="sgi-desktop">
+        <!-- System Menu Bar -->
+        <div class="menu-bar">
+            <span>InGen Workstation - Isla Nublar Operations Center v3.2.1</span>
+            <span class="system-time" id="system-time">00:00:00</span>
+        </div>
+        
+        <!-- Left Panel - System Monitor -->
+        <div class="left-panel">
+            <div class="system-monitor">
+                <div class="window-title">System Status Monitor</div>
+                <div class="system-list">
+                    <div class="sys-item sys-online" id="sys-1">PWR_MAIN: Primary power grid - ONLINE</div>
+                    <div class="sys-item sys-online" id="sys-2">SEC_FENCE: Perimeter barriers - ACTIVE</div>
+                    <div class="sys-item sys-online" id="sys-3">COMM_NET: Communications - OPERATIONAL</div>
+                    <div class="sys-item sys-online" id="sys-4">PWR_BACKUP: Emergency power - STANDBY</div>
+                    <div class="sys-item sys-online" id="sys-5">EMERGENCY: Protocols - READY</div>
+                    <div class="sys-item sys-online" id="sys-6">CONTAINMENT: Locks - SECURED</div>
+                    <div class="sys-item sys-online" id="sys-7">SURVEILLANCE: Cameras - MONITORING</div>
+                    <div class="sys-item sys-online" id="sys-8">MOTION_DET: Sensors - SCANNING</div>
+                    <div class="sys-item sys-online" id="sys-9">CONTROL_SYS: Computers - RESPONSIVE</div>
+                    <div class="sys-item sys-online" id="sys-10">MAINTENANCE: Automated - ACTIVE</div>
+                    <div class="sys-item sys-critical" id="sys-trex">TREX_CONTAIN: Paddock 9 - CRITICAL</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Central Display -->
+        <div class="central-display">
+            <div class="display-header">
+                <span>Park Visualization - Real-time Status</span>
+                <span>Sector 7-G Grid</span>
+            </div>
+            <div class="park-visualization">
+                <!-- Isla Nublar Island Map -->
+                <div class="island-map">
+                    <!-- Topographical Grid -->
+                    <div class="topo-grid"></div>
+                    
+                    <!-- Park Roads -->
+                    <div class="park-road main-road"></div>
+                    <div class="park-road north-road"></div>
+                    <div class="park-road south-road"></div>
+                    
+                    <!-- Park Sectors -->
+                    <div class="park-sector visitor-center">VISITOR<br>CENTER</div>
+                    <div class="park-sector raptor-pen">RAPTOR<br>PEN</div>
+                    <div class="park-sector trex-paddock">T-REX<br>PADDOCK</div>
+                    <div class="park-sector herbivore-valley">HERBIVORE<br>VALLEY</div>
+                    <div class="park-sector dilophosaurus-forest">DILOPH.<br>FOREST</div>
+                    <div class="park-sector maintenance-compound">MAINT.<br>COMP.</div>
+                    
+                    <!-- Security Gates -->
+                    <div class="security-gate gate-1" data-gate="1" title="Raptor Pen North Gate"></div>
+                    <div class="security-gate gate-2" data-gate="2" title="Raptor Pen South Gate"></div>
+                    <div class="security-gate gate-3" data-gate="3" title="T-Rex Paddock West Gate"></div>
+                    <div class="security-gate gate-4" data-gate="4" title="T-Rex Paddock South Gate"></div>
+                    <div class="security-gate gate-5" data-gate="5" title="Herbivore Valley North Gate"></div>
+                    <div class="security-gate gate-6" data-gate="6" title="Herbivore Valley East Gate"></div>
+                    <div class="security-gate gate-7" data-gate="7" title="Dilophosaurus Forest Gate"></div>
+                    <div class="security-gate gate-8" data-gate="8" title="Maintenance Compound Gate"></div>
+                    <div class="security-gate gate-9" data-gate="9" title="Visitor Center Main Gate"></div>
+                    <div class="security-gate gate-10" data-gate="10" title="Visitor Center South Gate"></div>
+                    
+                    <!-- Coastline Markers -->
+                    <div class="coastline-marker coast-1"></div>
+                    <div class="coastline-marker coast-2"></div>
+                    <div class="coastline-marker coast-3"></div>
+                    <div class="coastline-marker coast-4"></div>
+                    <div class="coastline-marker coast-5"></div>
+                    <div class="coastline-marker coast-6"></div>
+                    <div class="coastline-marker coast-7"></div>
+                    <div class="coastline-marker coast-8"></div>
+                    <div class="coastline-marker coast-9"></div>
+                    <div class="coastline-marker coast-10"></div>
+                </div>
+            </div>
+            
+            <!-- Question Area -->
+            <div class="question-area">
+                <div class="question-text" id="question-display">
+                    System ready. Initialize dinosaur knowledge assessment protocol.
+                </div>
+                <div class="answer-grid" id="answer-grid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel - Data Streams -->
+        <div class="right-panel">
+            <div class="data-stream">
+                <div class="window-title">Game Statistics</div>
+                <div class="data-content">
+                    <div class="data-line data-ok">CURRENT_SCORE: <span id="score-display">0</span></div>
+                    <div class="data-line data-ok">HIGH_SCORE: <span id="high-score-display">0</span></div>
+                    <div class="data-line data-ok">QUESTIONS_ANSWERED: <span id="questions-answered">0</span></div>
+                    <div class="data-line data-ok">SUCCESS_RATE: <span id="success-rate">100%</span></div>
+                    <div class="data-line data-ok">DANGER_LEVEL: <span id="danger-display">MINIMAL</span></div>
+                    <div class="data-line data-ok">SYSTEMS_FAILED: <span id="systems-failed">0/10</span></div>
+                </div>
+            </div>
+            
+            <div class="data-stream">
+                <div class="window-title">Security Log</div>
+                <div class="data-content" id="security-log">
+                    <div class="data-line data-ok">00:00:00 - System initialized</div>
+                    <div class="data-line data-ok">00:00:01 - All systems online</div>
+                    <div class="data-line data-ok">00:00:02 - Security protocols active</div>
+                    <div class="data-line data-ok">00:00:03 - Awaiting user input</div>
+                </div>
+            </div>
+            
+            <div class="data-stream">
+                <div class="window-title">Park Telemetry</div>
+                <div class="data-content" id="telemetry-data">
+                    <div class="data-line data-ok">TEMP_AMBIENT: 24.5°C</div>
+                    <div class="data-line data-ok">HUMIDITY: 68%</div>
+                    <div class="data-line data-ok">WIND_SPEED: 12 km/h</div>
+                    <div class="data-line data-ok">POWER_CONSUMPTION: 847 kW</div>
+                    <div class="data-line data-ok">NETWORK_LATENCY: 23ms</div>
+                    <div class="data-line data-ok">CPU_USAGE: 34%</div>
+                    <div class="data-line data-ok">MEMORY_USAGE: 67%</div>
+                    <div class="data-line data-ok">DISK_USAGE: 45%</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">SCORE: <span id="status-score" class="score-current">0</span></div>
+            <div class="status-item">HIGH: <span id="status-high" class="score-current">0</span></div>
+            <div class="status-item">FAILED: <span id="status-failed" class="score-current">0/10</span></div>
+            <div class="status-item">DANGER: <span id="status-danger" class="score-current">MINIMAL</span></div>
+            <div class="status-item">QUESTIONS: <span id="status-questions" class="score-current">0</span></div>
+            <div class="status-item">RATE: <span id="status-rate" class="score-current">100%</span></div>
+        </div>
+    </div>
+    
+    <!-- Start Dialog -->
+    <div id="start-modal" class="modal-overlay" style="display: flex;">
+        <div class="modal-dialog">
+            <div class="modal-title">🦖 InGen Security Protocol Initialization</div>
+            <div class="modal-content">
+                <div class="modal-text">
+                    <strong>JURASSIC PARK EMERGENCY PROTOCOL ACTIVATED</strong><br><br>
+                    Park systems require continuous knowledge verification to maintain stability.<br>
+                    Answer dinosaur questions correctly to keep all systems operational.<br><br>
+                    <strong>WARNING:</strong> Wrong answers cause critical system failures.<br>
+                    Game continues indefinitely until T-Rex containment is breached.<br><br>
+                    <em>How long can you survive the ultimate test?</em>
+                </div>
+                <button class="modal-btn" onclick="startGame()">INITIALIZE PROTOCOL</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Warning Dialog -->
+    <div id="warning-modal" class="modal-overlay warning-dialog">
+        <div class="modal-dialog">
+            <div class="modal-title">⚠️ SYSTEM FAILURE DETECTED ⚠️</div>
+            <div class="modal-content">
+                <div class="modal-text" id="warning-message"></div>
+                <button class="modal-btn" onclick="closeWarning()">ACKNOWLEDGE</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Game Over Dialog -->
+    <div id="gameover-modal" class="modal-overlay gameover-dialog">
+        <div class="modal-dialog">
+            <div class="modal-title">🦖 T-REX CONTAINMENT BREACH 🦖</div>
+            <div class="modal-content">
+                <div class="modal-text">
+                    <strong>PARK SYSTEMS COMPLETELY FAILED</strong>
+                </div>
+                <div class="trex-ascii">
+        ████████████████
+       ██              ██
+      ██    ████████    ██
+     ██    ██      ██    ██
+    ██████████████████████
+   ██                    ██
+  ██      ████████████    ██
+ ██     ██            ██  ██
+██     ██              ██  ██
+███████              █████
+      ██████████████████
+                </div>
+                <div class="modal-text">
+                    Final Score: <span id="final-score">0</span><br>
+                    Questions Survived: <span id="final-questions">0</span><br>
+                    <span id="final-message"></span>
+                </div>
+                <button class="modal-btn" onclick="restartGame()">RESTART PROTOCOL</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Extensive question pool for endless gameplay
+        const dinosaurQuestions = [
+            // Basic dinosaur knowledge
+            { q: "How many teeth did a Tyrannosaurus Rex have?", a: ["About 30", "About 50", "About 60", "About 80"], c: 2 },
+            { q: "What does 'Velociraptor' mean in Latin?", a: ["Fast hunter", "Swift seizer", "Quick killer", "Speed demon"], c: 1 },
+            { q: "How tall could a Brachiosaurus reach?", a: ["20 feet", "30 feet", "40 feet", "50 feet"], c: 2 },
+            { q: "What did Triceratops primarily eat?", a: ["Fish", "Other dinosaurs", "Plants", "Insects"], c: 2 },
+            { q: "How fast could a Velociraptor run?", a: ["15 mph", "25 mph", "35 mph", "45 mph"], c: 1 },
+            { q: "How long was a full-grown T-Rex?", a: ["20 feet", "30 feet", "40 feet", "50 feet"], c: 2 },
+            { q: "How many horns did Triceratops have?", a: ["Two", "Three", "Four", "Five"], c: 1 },
+            { q: "How many fingers did T-Rex have on each arm?", a: ["One", "Two", "Three", "Four"], c: 1 },
+            { q: "What does 'dinosaur' mean in Greek?", a: ["Terrible lizard", "Giant reptile", "Ancient beast", "Big animal"], c: 0 },
+            { q: "How heavy was an adult Brachiosaurus?", a: ["30 tons", "50 tons", "70 tons", "90 tons"], c: 2 },
+            
+            // Advanced dinosaur facts
+            { q: "What made Dilophosaurus distinctive?", a: ["Two head crests", "Spikes on back", "Long neck", "Big claws"], c: 0 },
+            { q: "What was special about Stegosaurus plates?", a: ["They were armor", "Temperature control", "Fat storage", "Weapons"], c: 1 },
+            { q: "How did most dinosaurs reproduce?", a: ["Live birth", "Laid eggs", "Budding", "Splitting"], c: 1 },
+            { q: "What was the smallest known dinosaur?", a: ["Compsognathus", "Microraptor", "Fruitadens", "Anchiornis"], c: 0 },
+            { q: "In which periods did dinosaurs exist?", a: ["Jurassic only", "Cretaceous only", "Triassic only", "All three periods"], c: 3 },
+            { q: "What type of diet did Parasaurolophus have?", a: ["Carnivorous", "Omnivorous", "Herbivorous", "Piscivorous"], c: 2 },
+            { q: "How long were Velociraptor claws?", a: ["2 inches", "4 inches", "6 inches", "8 inches"], c: 1 },
+            { q: "What was unique about Spinosaurus?", a: ["Sail on back", "Crown on head", "Long tail", "Big eyes"], c: 0 },
+            { q: "How did Triceratops defend itself?", a: ["Speed", "Camouflage", "Horns and frill", "Pack hunting"], c: 2 },
+            { q: "What was the brain size of T-Rex relative to body?", a: ["Very small", "Small", "Average", "Large"], c: 2 },
+            
+            // Jurassic Park movie facts
+            { q: "In Jurassic Park, what was used to fill DNA gaps?", a: ["Lizard DNA", "Bird DNA", "Frog DNA", "Fish DNA"], c: 2 },
+            { q: "Who played Dr. Alan Grant in Jurassic Park?", a: ["Jeff Goldblum", "Sam Neill", "Richard Attenborough", "Wayne Knight"], c: 1 },
+            { q: "What was Dennis Nedry's job at the park?", a: ["Security", "Programmer", "Tour guide", "Scientist"], c: 1 },
+            { q: "Which dinosaur killed the lawyer in the bathroom?", a: ["Velociraptor", "Dilophosaurus", "T-Rex", "Compsognathus"], c: 2 },
+            { q: "What did John Hammond carry in his cane?", a: ["Weapons", "Amber", "Medicine", "Nothing"], c: 1 },
+            { q: "What computer system ran Jurassic Park?", a: ["Windows", "Mac OS", "UNIX", "DOS"], c: 2 },
+            { q: "Who said 'Life finds a way'?", a: ["Dr. Grant", "Dr. Malcolm", "Dr. Sattler", "Hammond"], c: 1 },
+            { q: "What was the park's main security weakness?", a: ["Power dependence", "Human error", "Network bugs", "All of the above"], c: 3 },
+            { q: "How many people survived the first island visit?", a: ["Two", "Three", "Four", "Five"], c: 2 },
+            { q: "What attracted the T-Rex in the car scene?", a: ["Movement", "Light", "Sound", "Smell"], c: 0 },
+            
+            // More challenging questions
+            { q: "What era came after the Mesozoic?", a: ["Paleozoic", "Cenozoic", "Precambrian", "Quaternary"], c: 1 },
+            { q: "Which dinosaur had the longest neck?", a: ["Brachiosaurus", "Diplodocus", "Mamenchisaurus", "Sauroposeidon"], c: 3 },
+            { q: "What caused the dinosaur extinction 65 million years ago?", a: ["Volcano", "Asteroid", "Disease", "Climate change"], c: 1 },
+            { q: "Which modern animal is closest to dinosaurs?", a: ["Lizards", "Crocodiles", "Birds", "Snakes"], c: 2 },
+            { q: "What was the largest land carnivore dinosaur?", a: ["T-Rex", "Giganotosaurus", "Spinosaurus", "Carcharodontosaurus"], c: 2 },
+            { q: "How many chambers did dinosaur hearts have?", a: ["Two", "Three", "Four", "Unknown"], c: 2 },
+            { q: "What did Ankylosaurus use for defense?", a: ["Speed", "Armor plating", "Camouflage", "Pack behavior"], c: 1 },
+            { q: "Which dinosaur had the thickest skull?", a: ["Triceratops", "Pachycephalosaurus", "Stygimoloch", "Carnotaurus"], c: 1 },
+            { q: "What was special about Therizinosaurus claws?", a: ["Very sharp", "Very long", "Very curved", "Very thick"], c: 1 },
+            { q: "How did Maiasaura care for their young?", a: ["Abandoned them", "Fed them in nests", "Carried them", "Taught them to hunt"], c: 1 }
+        ];
+
+        // Game state
+        let gameActive = false;
+        let currentScore = 0;
+        let questionsAnswered = 0;
+        let correctAnswers = 0;
+        let highScore = parseInt(localStorage.getItem('sgiParkHighScore')) || 0;
+        let failedSystems = 0;
+        let dangerLevel = 0;
+
+        const dangerLevels = ["MINIMAL", "LOW", "MODERATE", "ELEVATED", "HIGH", "SEVERE", "CRITICAL", "EXTREME", "MAXIMUM", "T-REX IMMINENT"];
+        const systemFailures = [
+            "Main power grid experiencing critical fluctuations!",
+            "Security fence breach detected in multiple sectors!",
+            "Communication network completely offline!",
+            "Backup generators failing - power loss imminent!",
+            "Emergency protocols compromised - safety systems down!",
+            "Containment locks malfunctioning across all sectors!",
+            "Security camera network offline - blind surveillance!",
+            "Motion sensor grid failure - detection impossible!",
+            "Control computers unresponsive - manual override required!",
+            "Maintenance systems critical - automated repair offline!"
+        ];
+
+        function startGame() {
+            document.getElementById('start-modal').style.display = 'none';
+            gameActive = true;
+            updateAllDisplays();
+            showNextQuestion();
+            startTelemetryUpdates();
+        }
+
+        function showNextQuestion() {
+            if (!gameActive) return;
+            
+            const question = dinosaurQuestions[Math.floor(Math.random() * dinosaurQuestions.length)];
+            document.getElementById('question-display').textContent = question.q;
+            
+            const answerGrid = document.getElementById('answer-grid');
+            answerGrid.innerHTML = '';
+            
+            question.a.forEach((answer, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.textContent = `${String.fromCharCode(65 + index)}: ${answer}`;
+                btn.onclick = () => selectAnswer(index, question.c);
+                answerGrid.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(selected, correct) {
+            if (!gameActive) return;
+            
+            questionsAnswered++;
+            const buttons = document.querySelectorAll('.answer-btn');
+            const isCorrect = selected === correct;
+            
+            buttons.forEach((btn, idx) => {
+                btn.onclick = null;
+                btn.classList.add('disabled');
+                if (idx === selected) {
+                    btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+                }
+                if (idx === correct && !isCorrect) {
+                    btn.classList.add('correct');
+                }
+            });
+            
+            if (isCorrect) {
+                currentScore++;
+                correctAnswers++;
+                addSecurityLog("Question answered correctly - systems stable", "ok");
+                setTimeout(() => showNextQuestion(), 1500);
+            } else {
+                addSecurityLog(`Incorrect answer - system failure #${failedSystems + 1}`, "critical");
+                failSystem();
+            }
+            
+            updateAllDisplays();
+        }
+
+        function failSystem() {
+            failedSystems++;
+            dangerLevel = Math.min(9, failedSystems);
+            
+            if (failedSystems <= 10) {
+                // Fail the system
+                const sysElement = document.getElementById(`sys-${failedSystems}`);
+                sysElement.className = 'sys-item sys-failed';
+                sysElement.textContent = sysElement.textContent.replace(/ONLINE|ACTIVE|OPERATIONAL|STANDBY|READY|SECURED|MONITORING|SCANNING|RESPONSIVE/, 'FAILED');
+                
+                // Breach a security gate
+                const gates = document.querySelectorAll('.security-gate:not(.breached)');
+                if (gates.length > 0) {
+                    const randomGate = gates[Math.floor(Math.random() * gates.length)];
+                    randomGate.classList.add('breached');
+                    addSecurityLog(`Security Gate ${randomGate.dataset.gate} breached - ${randomGate.title}`, "critical");
+                }
+                
+                // Update T-Rex status
+                const trexSys = document.getElementById('sys-trex');
+                if (failedSystems >= 8) {
+                    trexSys.className = 'sys-item sys-critical';
+                    trexSys.textContent = 'TREX_CONTAIN: Paddock 9 - BREACH IMMINENT';
+                } else if (failedSystems >= 5) {
+                    trexSys.className = 'sys-item sys-warning';
+                    trexSys.textContent = 'TREX_CONTAIN: Paddock 9 - FAILING';
+                }
+                
+                showWarning(systemFailures[failedSystems - 1]);
+                
+                if (failedSystems >= 10) {
+                    setTimeout(() => gameOver(), 2000);
+                }
+            }
+        }
+
+        function showWarning(message) {
+            document.getElementById('warning-message').textContent = message;
+            document.getElementById('warning-modal').style.display = 'flex';
+        }
+
+        function closeWarning() {
+            document.getElementById('warning-modal').style.display = 'none';
+            if (gameActive && failedSystems < 10) {
+                setTimeout(() => showNextQuestion(), 500);
+            }
+        }
+
+        function gameOver() {
+            gameActive = false;
+            
+            if (currentScore > highScore) {
+                highScore = currentScore;
+                localStorage.setItem('sgiParkHighScore', highScore.toString());
+                document.getElementById('final-message').textContent = "NEW HIGH SCORE! But the T-Rex still escaped...";
+            } else {
+                document.getElementById('final-message').textContent = "All park systems failed. Emergency evacuation required!";
+            }
+            
+            document.getElementById('final-score').textContent = currentScore;
+            document.getElementById('final-questions').textContent = questionsAnswered;
+            document.getElementById('gameover-modal').style.display = 'flex';
+            
+            addSecurityLog("T-REX CONTAINMENT BREACH - GAME OVER", "critical");
+        }
+
+        function restartGame() {
+            // Reset all variables
+            gameActive = false;
+            currentScore = 0;
+            questionsAnswered = 0;
+            correctAnswers = 0;
+            failedSystems = 0;
+            dangerLevel = 0;
+            
+            // Reset UI
+            for (let i = 1; i <= 10; i++) {
+                const sys = document.getElementById(`sys-${i}`);
+                sys.className = 'sys-item sys-online';
+            }
+            document.getElementById('sys-1').textContent = 'PWR_MAIN: Primary power grid - ONLINE';
+            document.getElementById('sys-2').textContent = 'SEC_FENCE: Perimeter barriers - ACTIVE';
+            document.getElementById('sys-3').textContent = 'COMM_NET: Communications - OPERATIONAL';
+            document.getElementById('sys-4').textContent = 'PWR_BACKUP: Emergency power - STANDBY';
+            document.getElementById('sys-5').textContent = 'EMERGENCY: Protocols - READY';
+            document.getElementById('sys-6').textContent = 'CONTAINMENT: Locks - SECURED';
+            document.getElementById('sys-7').textContent = 'SURVEILLANCE: Cameras - MONITORING';
+            document.getElementById('sys-8').textContent = 'MOTION_DET: Sensors - SCANNING';
+            document.getElementById('sys-9').textContent = 'CONTROL_SYS: Computers - RESPONSIVE';
+            document.getElementById('sys-10').textContent = 'MAINTENANCE: Automated - ACTIVE';
+            document.getElementById('sys-trex').textContent = 'TREX_CONTAIN: Paddock 9 - CRITICAL';
+            document.getElementById('sys-trex').className = 'sys-item sys-critical';
+            
+            // Reset security gates
+            document.querySelectorAll('.security-gate').forEach(gate => {
+                gate.classList.remove('breached');
+            });
+            
+            // Clear security log
+            document.getElementById('security-log').innerHTML = '';
+            addSecurityLog("System reinitialized", "ok");
+            addSecurityLog("All systems restored to operational status", "ok");
+            
+            // Hide game over and show start
+            document.getElementById('gameover-modal').style.display = 'none';
+            document.getElementById('start-modal').style.display = 'flex';
+            
+            updateAllDisplays();
+        }
+
+        function updateAllDisplays() {
+            const successRate = questionsAnswered > 0 ? Math.round((correctAnswers / questionsAnswered) * 100) : 100;
+            
+            // Right panel displays
+            document.getElementById('score-display').textContent = currentScore;
+            document.getElementById('high-score-display').textContent = highScore;
+            document.getElementById('questions-answered').textContent = questionsAnswered;
+            document.getElementById('success-rate').textContent = successRate + '%';
+            document.getElementById('danger-display').textContent = dangerLevels[dangerLevel];
+            document.getElementById('systems-failed').textContent = `${failedSystems}/10`;
+            
+            // Status bar
+            document.getElementById('status-score').textContent = currentScore;
+            document.getElementById('status-high').textContent = highScore;
+            document.getElementById('status-failed').textContent = `${failedSystems}/10`;
+            document.getElementById('status-danger').textContent = dangerLevels[dangerLevel];
+            document.getElementById('status-questions').textContent = questionsAnswered;
+            document.getElementById('status-rate').textContent = successRate + '%';
+            
+            // Update colors based on danger level
+            const dangerElements = [
+                document.getElementById('danger-display'),
+                document.getElementById('status-danger')
+            ];
+            
+            const failedElements = [
+                document.getElementById('systems-failed'),
+                document.getElementById('status-failed')
+            ];
+            
+            dangerElements.forEach(el => {
+                el.className = dangerLevel <= 2 ? 'data-ok' : dangerLevel <= 6 ? 'data-warning' : 'data-critical';
+            });
+            
+            failedElements.forEach(el => {
+                el.className = failedSystems <= 2 ? 'score-current' : failedSystems <= 6 ? 'score-warning' : 'score-critical';
+            });
+        }
+
+        function addSecurityLog(message, type) {
+            const log = document.getElementById('security-log');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `data-line data-${type}`;
+            entry.textContent = `${time} - ${message}`;
+            log.appendChild(entry);
+            
+            // Keep only last 50 entries
+            while (log.children.length > 50) {
+                log.removeChild(log.firstChild);
+            }
+            
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updateSystemTime() {
+            document.getElementById('system-time').textContent = new Date().toLocaleTimeString();
+        }
+
+        function startTelemetryUpdates() {
+            setInterval(() => {
+                const telemetry = document.getElementById('telemetry-data');
+                const entries = telemetry.querySelectorAll('.data-line');
+                
+                // Update some values randomly
+                entries[0].innerHTML = `TEMP_AMBIENT: ${(22 + Math.random() * 6).toFixed(1)}°C`;
+                entries[1].innerHTML = `HUMIDITY: ${Math.floor(60 + Math.random() * 20)}%`;
+                entries[2].innerHTML = `WIND_SPEED: ${Math.floor(8 + Math.random() * 10)} km/h`;
+                entries[3].innerHTML = `POWER_CONSUMPTION: ${Math.floor(800 + Math.random() * 200)} kW`;
+                entries[4].innerHTML = `NETWORK_LATENCY: ${Math.floor(15 + Math.random() * 20)}ms`;
+                entries[5].innerHTML = `CPU_USAGE: ${Math.floor(20 + Math.random() * 40)}%`;
+                entries[6].innerHTML = `MEMORY_USAGE: ${Math.floor(50 + Math.random() * 30)}%`;
+                entries[7].innerHTML = `DISK_USAGE: ${Math.floor(40 + Math.random() * 20)}%`;
+            }, 5000);
+        }
+
+        // Initialize
+        updateAllDisplays();
+        setInterval(updateSystemTime, 1000);
+        updateSystemTime();
+    </script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jurassic Park Trivia - Simple Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #8B4513, #2F4F4F);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #FFD700;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px #000;
+            margin-bottom: 10px;
+        }
+        h2 {
+            color: #FFA500;
+            margin-bottom: 30px;
+        }
+        .question {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 2px solid #FFD700;
+        }
+        .question h3 {
+            color: #FFD700;
+            margin-bottom: 15px;
+        }
+        .options {
+            text-align: left;
+        }
+        .option {
+            background: rgba(255,255,255,0.1);
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .option:hover {
+            background: rgba(255,215,0,0.2);
+        }
+        .correct {
+            background: rgba(0,255,0,0.3) !important;
+        }
+        .incorrect {
+            background: rgba(255,0,0,0.3) !important;
+        }
+        button {
+            background: linear-gradient(45deg, #8B0000, #DC143C);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 20px 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        .score {
+            font-size: 24px;
+            color: #FFD700;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🦕 JURASSIC PARK 🦖</h1>
+        <h2>TRIVIA ASSESSMENT</h2>
+        
+        <div id="quiz-container">
+            <div id="question-container"></div>
+            <button onclick="startQuiz()">BEGIN ASSESSMENT</button>
+            <div id="score-container" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "What is the name of the island where Jurassic Park is located?",
+                options: ["Isla Nublar", "Isla Sorna", "Isla Muerta", "Isla Verde"],
+                correct: 0
+            },
+            {
+                question: "Who wrote the novel on which the movie is based?",
+                options: ["Stephen King", "Michael Crichton", "Dean Koontz", "Tom Clancy"],
+                correct: 1
+            },
+            {
+                question: "What is Dr. Alan Grant's profession?",
+                options: ["Geneticist", "Paleobotanist", "Paleontologist", "Mathematician"],
+                correct: 2
+            },
+            {
+                question: "Which dinosaur is NOT featured in the original Jurassic Park movie?",
+                options: ["Velociraptor", "Spinosaurus", "Brachiosaurus", "Dilophosaurus"],
+                correct: 1
+            },
+            {
+                question: "Which character says 'Life finds a way'?",
+                options: ["Dr. Grant", "Dr. Malcolm", "Dr. Sattler", "John Hammond"],
+                correct: 1
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
+
+        function startQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById('score-container').style.display = 'none';
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQuestion >= questions.length) {
+                showResults();
+                return;
+            }
+
+            const q = questions[currentQuestion];
+            const container = document.getElementById('question-container');
+            
+            container.innerHTML = `
+                <div class="question">
+                    <h3>Question ${currentQuestion + 1} of ${questions.length}</h3>
+                    <p>${q.question}</p>
+                    <div class="options">
+                        ${q.options.map((option, index) => 
+                            `<div class="option" onclick="selectAnswer(${index})">${option}</div>`
+                        ).join('')}
+                    </div>
+                    <button onclick="nextQuestion()" style="display: none;" id="next-btn">Next Question</button>
+                </div>
+            `;
+            answered = false;
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (answered) return;
+            answered = true;
+
+            const q = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            
+            options.forEach((option, index) => {
+                if (index === q.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex && index !== q.correct) {
+                    option.classList.add('incorrect');
+                }
+                option.style.pointerEvents = 'none';
+            });
+
+            if (selectedIndex === q.correct) {
+                score++;
+            }
+
+            document.getElementById('next-btn').style.display = 'inline-block';
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            showQuestion();
+        }
+
+        function showResults() {
+            const container = document.getElementById('question-container');
+            const percentage = Math.round((score / questions.length) * 100);
+            
+            let message = "";
+            if (percentage >= 80) message = "🏆 Excellent! You're a true Jurassic Park expert!";
+            else if (percentage >= 60) message = "👍 Good job! You know your dinosaurs!";
+            else message = "📚 Time to rewatch the movie and study up!";
+
+            container.innerHTML = `
+                <div class="question">
+                    <h3>🦕 ASSESSMENT COMPLETE 🦖</h3>
+                    <div class="score">Your Score: ${score}/${questions.length} (${percentage}%)</div>
+                    <p>${message}</p>
+                    <button onclick="startQuiz()">Try Again</button>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
